@@ -2,7 +2,9 @@ package com.bhavani.authenticator.service;
 
 import java.util.HashMap;
 
+import com.bhavani.authenticator.dao.Caller;
 import com.bhavani.authenticator.dao.Credentials;
+import com.bhavani.authenticator.dao.JWTPayload;
 import com.bhavani.authenticator.dao.UserInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +25,10 @@ public class AuthenticatorService {
 
     @Autowired
     private JWEGenerator jweGenerator;
+
+    @Autowired
+    private JWEValidator jweValidator;
+
 
     @RequestMapping(value = "/signon", method = RequestMethod.POST)
     public ResponseEntity<String> signon(@RequestBody Credentials credentials) {
@@ -44,5 +51,20 @@ public class AuthenticatorService {
             return ResponseEntity.status(500).body("{'OOPS!!!  Error Occurred'}");
         }
 
+    }
+
+    @RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
+    public ResponseEntity signon(@RequestHeader("Authorization") String jwtToken,
+                                @RequestBody Caller caller) {
+        try{
+        return ResponseEntity.ok().body(jweValidator.validateToken(jwtToken, caller));
+        }catch(IllegalAccessException e){
+            e.printStackTrace();
+            return ResponseEntity.status(403).body("Unauthorized access");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Server side error");
+        }
     }
 }

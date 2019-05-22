@@ -41,7 +41,7 @@ public class JWEGenerator {
 		JWTClaimsSet.Builder jwtClaimsBuilder = new JWTClaimsSet.Builder().issuer(appName).subject(userInfo.getUserName())
 				.audience(Arrays.asList("AccountsMS", "CustomerMS"))
 				.expirationTime(new Date(now.getTime() + tokenExpiryInterval)) // expires in 10 minutes
-				.notBeforeTime(now).issueTime(now).claim("accountNumber", "userInfo.getAccountNumber()")
+				.notBeforeTime(now).issueTime(now).claim("accountNumber", userInfo.getAccountNumber())
 				.jwtID(UUID.randomUUID().toString());
 
 		if (data != null) {

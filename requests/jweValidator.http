@@ -1,0 +1,9 @@
+POST http://localhost:9091/token/authorize HTTP/1.1
+Content-Type: application/json
+Authorization: eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.e3-4iayPaiIN2Y_mWLMF1oRiY9y04pTx6ep_kn_WOXlPzCvg4LUBDGFiUzSwcKWEaqPrcQ-rxCFEutl1c30OWEr7a-a4dqPEUZyOl-T1UgTgw2yG9y8HioJpXWiv5_FPlqIr7Hx31hMLBIFekZroMvcYWy_zPOhkJ8n3SJnIhVdeZaRB9kQ5SOuyUYLuGoRqOu_WdDgarZFb0fyRLr_GqXgZhncNWHl4dYfThyNsDTTuT09_f0IcM82-zsuH5IRsUNlMokczQBSVBNgkrMAN0k-LYQTRbr7_JFUrY8p9FiS8TIeCqXkCJU5qgjZ1DPmYOd4Xkzg4U_Im7BFFKUOJtA.San4PELdfnO9TO_q58Kh9Q.IRJqfdHNHkREVYUMl4IC5HssZAoKrYWaQD15liSkG3VBbXpOdZ-MES1IoG5yo_4nQzapbMsJ6kb94K8bIFEkp74JxGKYKAYu-8wQn77VoXy1DlWevWFkWTOwuplZr6ifkrvCLOF4Bw-z9Fgid8nGCPgQlZCRgRXBMbQWszin5EriV8EJ_lQjg0AoFL99Z4Aefp1KLaHvtjgjKLl7xDs0B7k8Bxj3mQF9_F36QqTvp5naJkPd5aeBuJyK1pw-_pRtw6N9InUoI7BgkRBCaWOD1w.H9ouan4Amvg2x2Or9vmQfg
+
+{
+    "name" : "AccountsMS",
+    "resource" : "abc",
+    "httpVerb" : "post"
+}
