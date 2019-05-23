@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import com.bhavani.authenticator.dao.Caller;
 import com.bhavani.authenticator.dao.Credentials;
-import com.bhavani.authenticator.dao.JWTPayload;
 import com.bhavani.authenticator.dao.UserInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
