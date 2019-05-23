@@ -42,7 +42,7 @@ public class JWEGenerator {
 				.audience(Arrays.asList("AccountsMS", "CustomerMS"))
 				.expirationTime(new Date(now.getTime() + tokenExpiryInterval)) // expires in 10 minutes
 				.notBeforeTime(now).issueTime(now).claim("accountNumber", userInfo.getAccountNumber())
-				.jwtID(UUID.randomUUID().toString());
+				.jwtID(UUID.randomUUID().toString()).claim("role", userInfo.getRole());
 
 		if (data != null) {
 			for (Map.Entry<String, String> e : data.entrySet()) {

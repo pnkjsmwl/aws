@@ -14,4 +14,5 @@ public class JWTPayload{
     private Date issueTime;
     private String accountNumber;
     private String jwtID;
+    private String role;
 }

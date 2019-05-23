@@ -7,6 +7,6 @@ public class UserInfo{
     private String userName;
     private String password;
     private String accountNumber;
-
+    private String role;
 
 }

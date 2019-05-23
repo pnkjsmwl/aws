@@ -6,6 +6,8 @@ import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import com.bhavani.authenticator.dao.Caller;
 import com.bhavani.authenticator.dao.JWTPayload;
@@ -16,6 +18,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -26,6 +30,10 @@ import org.springframework.stereotype.Component;
 public class JWEValidator{
     @Value("${tokenExpiryInterval}")
     private long tokenExpiryInterval;
+
+    @Autowired
+    @Qualifier("policy")
+    private HashMap<String,List<String>> policy;
 
     private Log log = LogFactory.getLog(JWEValidator.class);
 
@@ -39,12 +47,14 @@ public class JWEValidator{
         JWTPayload payload = new JWTPayload();
         JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         payload.setAccountNumber(jwtClaimsSet.getStringClaim("accountNumber"));
+        payload.setRole(jwtClaimsSet.getStringClaim("role"));
         payload.setAudience(jwtClaimsSet.getAudience());
         payload.setExpirationTime(jwtClaimsSet.getExpirationTime());
         payload.setIssueTime(jwtClaimsSet.getIssueTime());
         payload.setIssuer(jwtClaimsSet.getIssuer());
         payload.setJwtID(jwtClaimsSet.getJWTID());
         payload.setSubject(jwtClaimsSet.getSubject());
+
 
         if(! verifyTokenInfo(payload,caller))
             throw new IllegalAccessException("JWT token validation failed !!!");
@@ -64,6 +74,15 @@ public class JWEValidator{
         }
         if (! payload.getAudience().contains(caller.getName())){
             log.error("Invalid caller of JWT token !!!");
+            return false;
+        }
+        String policyKey=caller.getHttpVerb()+caller.getResource();
+        if(! policy.containsKey(policyKey)){
+            log.error("API is not configured in the policy document !!!");
+            return false;
+        }
+        if (! policy.get(policyKey).contains(payload.getRole())){
+            log.error("User has insufficient role !!!");
             return false;
         }
             
