@@ -1,12 +1,22 @@
 package com.bhavani.authenticator.dao;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.Data;
 
 @Data
+@Document
 public class UserInfo{
-    private String userName;
-    private String password;
-    private String accountNumber;
-    private String role;
+	@Id
+	private String id;
+	@Indexed
+	private String userName;
+	private String password;
+	@Indexed
+	private String accountNumber;
+	@Indexed
+	private String role;
 
 }
