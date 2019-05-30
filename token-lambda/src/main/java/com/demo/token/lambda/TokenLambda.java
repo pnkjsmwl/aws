@@ -13,9 +13,6 @@ import com.demo.token.dao.Credentials;
 
 public class TokenLambda implements RequestHandler<Credentials, ResponseEntity<String>> {
 
-	private static final String SIGN_ON = "signon";
-
-
 	public ResponseEntity<String> handleRequest(Credentials cred, Context context) {
 		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
 		LambdaLogger logger = context.getLogger();
@@ -34,11 +31,9 @@ public class TokenLambda implements RequestHandler<Credentials, ResponseEntity<S
 		cred.setArn(invokedFunctionArn);
 		if(authenticatorService!=null) {
 
-			if(SIGN_ON.equals(invokedLambda)) {
-				response = authenticatorService.signon(cred);
-				if(response!=null) 
-					logger.log("Body : "+response.getBody());
-			}
+			response = authenticatorService.signon(cred);
+			if(response!=null) 
+				logger.log("Body : "+response.getBody());
 		}
 		((AnnotationConfigApplicationContext) appContext).close();
 		return response;

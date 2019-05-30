@@ -13,11 +13,9 @@ import org.springframework.context.annotation.PropertySource;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 
 import redis.clients.jedis.Jedis;
 
@@ -38,14 +36,15 @@ public class ApplConfig {
 	@Value("${aws.secret.key}")
 	private String awsSecretKey;
 
-	@Value("${spring.redis.host}")
+	@Value("${redis.host}")
 	private String redis_host;
 
-	@Value("${spring.redis.port}")
+	@Value("${redis.port}")
 	private int redis_port;
 
 	@Bean
 	public Jedis jedis() {
+		System.out.println("Redis HOST : "+redis_host);
 		return new Jedis(redis_host, redis_port);
 	}
 
@@ -66,10 +65,6 @@ public class ApplConfig {
 	}
 
 	public AmazonDynamoDB amazonDynamoDB() {
-
-
-
-
 		System.out.println("DynamoDB Configuration : \n"+serviceEndpoint+"\n"+region+"\n"+awsAccessKey+"\n"+awsSecretKey+"\n");
 		AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(serviceEndpoint, region);
 		AWSStaticCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
@@ -81,13 +76,13 @@ public class ApplConfig {
 		return amazonDynamoDB;
 	}
 
-	public DynamoDB dynamoDB() {
+	/*public DynamoDB dynamoDB() {
 		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(serviceEndpoint,region);
 		DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard()
 				.withEndpointConfiguration(endpointConfiguration)
 				.build());
 		return dynamoDB;
-	}
+	}*/
 
 
 }

@@ -13,13 +13,10 @@ import com.demo.token.dao.Caller;
 
 public class ValidateToken implements RequestHandler<Caller, ResponseEntity<?>> {
 
-	private static final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
-	private static final String VALIDATE = "validate";
-
 	@Override
 	public ResponseEntity<?> handleRequest(Caller caller, Context context) {
+		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
 		LambdaLogger logger = context.getLogger();
-
 
 		/* arn format -> arn:aws:<resource>:<region>:<unique id>:function:<name of lambda invoked>  
 		 * eg. arn:aws:lambda:us-east-2:161770494564:function:signon
@@ -34,14 +31,12 @@ public class ValidateToken implements RequestHandler<Caller, ResponseEntity<?>> 
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 		//cred.setArn(invokedFunctionArn);
 		if(authenticatorService!=null) {
-
-			if(VALIDATE.equals(invokedLambda)) {
-				String jwtToken = caller.getHeaders().get("Authorization");
-				response = authenticatorService.validate(jwtToken , caller);
-				if(response!=null) 
-					logger.log("Body : "+response.getBody());
-			}
+			String jwtToken = caller.getHeaders().get("Authorization");
+			response = authenticatorService.validate(jwtToken , caller);
+			if(response!=null) 
+				logger.log("Body : "+response.getBody());
 		}
+		((AnnotationConfigApplicationContext) appContext).close();
 		return response;
 	}
 
