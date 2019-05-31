@@ -1,5 +1,7 @@
 package com.demo.token.authenticator.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -18,26 +20,31 @@ import com.demo.token.dao.Credentials;
 import com.demo.token.dao.UserInfo;
 import com.demo.token.dao.repo.DynamoDbRepo;
 
+import redis.clients.jedis.Jedis;
+
 @RestController
 public class AuthenticatorService  {
+	private Log log = LogFactory.getLog(AuthenticatorService.class);
 
 	private JWEGenerator jweGenerator;
 	private JWEValidator jweValidator;
 	private DynamoDbRepo dynamoDbRepo;
 	private CommonUtils util;
+	private Jedis jedis;
 
 	@Autowired
-	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util) {
+	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util, Jedis jedis) {
 		this.jweGenerator = jweGenerator;
 		this.jweValidator = jweValidator;
 		this.dynamoDbRepo = dynamoDbRepo;
 		this.util = util;
+		this.jedis = jedis;
 	}
 
 	@RequestMapping(value = "/signon", method = RequestMethod.POST)
 	public ResponseEntity<String> signon(@RequestBody Credentials credentials) {
 		try {
-			UserInfo user = new UserInfo("1982713", "pankaj", "test123", "121231231231", "user");//userInfoRepo.findByUserName(credentials.getUserName());
+			UserInfo user = new UserInfo("1982713", "pankaj", "test123", "121231231231", "PROFILE_ROLE");//userInfoRepo.findByUserName(credentials.getUserName());
 			/*if (user!=null) {*/
 			//if (util.validatePassword(credentials.getPassword(), user.getPassword())) {
 			if("test123".equals(credentials.getPassword())){
@@ -60,11 +67,16 @@ public class AuthenticatorService  {
 		}
 	}
 
-
 	@RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
 	public ResponseEntity<?> validate(@RequestHeader("Authorization") String jwtToken, @RequestBody Caller caller) {
 		try{
-			return ResponseEntity.ok().body(jweValidator.validateToken(jwtToken, caller));
+			String tokenFromRedis = jedis.get(caller.getAuthorizationToken());
+			log.info("Value from redis against token : "+tokenFromRedis);
+			System.out.println("Value from redis against token : "+tokenFromRedis);
+			if(tokenFromRedis!=null)
+			{
+				return ResponseEntity.ok().body(jweValidator.validateToken(caller.getAuthorizationToken(), caller));
+			}
 		}catch(IllegalAccessException e){
 			e.printStackTrace();
 			return ResponseEntity.status(403).body("Unauthorized access");
@@ -73,6 +85,7 @@ public class AuthenticatorService  {
 			e.printStackTrace();
 			return ResponseEntity.status(500).body("Server side error");
 		}
+		return ResponseEntity.status(403).body("Unauthorized access");
 	}
 
 	@PostMapping("/user/add")

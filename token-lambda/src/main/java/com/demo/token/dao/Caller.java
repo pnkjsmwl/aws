@@ -7,6 +7,7 @@ public class Caller{
     private String name;
     private String resource;
     private String httpVerb;
+    private String authorizationToken;
     private Map<String,String> headers = new HashMap<>();
     
 	public String getName() {
@@ -26,6 +27,12 @@ public class Caller{
 	}
 	public void setHttpVerb(String httpVerb) {
 		this.httpVerb = httpVerb;
+	}
+	public String getAuthorizationToken() {
+		return authorizationToken;
+	}
+	public void setAuthorizationToken(String authorizationToken) {
+		this.authorizationToken = authorizationToken;
 	}
 	public Map<String, String> getHeaders() {
 		return headers;

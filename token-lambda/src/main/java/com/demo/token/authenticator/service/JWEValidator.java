@@ -24,8 +24,6 @@ import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import redis.clients.jedis.Jedis;
-
 @Component
 public class JWEValidator{
 	@Value("${tokenExpiryInterval}")
@@ -35,18 +33,13 @@ public class JWEValidator{
 	@Qualifier("policy")
 	private HashMap<String,List<String>> policy;
 
-	@Autowired
-	private Jedis jedis;
-
 	private Log log = LogFactory.getLog(JWEValidator.class);
-
+	private String errorMessage;
 	public JWTPayload validateToken(String JWEToken,Caller caller) throws Exception{
 		EncryptedJWT jwt = EncryptedJWT.parse(JWEToken);
 		RSAPrivateKey privateKey = getPrivateKey("private_key.pem");
 		RSADecrypter decrypter = new RSADecrypter(privateKey);
 		jwt.decrypt(decrypter);
-
-		log.info("Value from redis : "+jedis.get(JWEToken));
 
 		JWTPayload payload = new JWTPayload();
 		JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
@@ -61,31 +54,36 @@ public class JWEValidator{
 
 
 		if(! verifyTokenInfo(payload,caller))
-			throw new IllegalAccessException("JWT token validation failed !!!");
+			throw new IllegalAccessException("JWT token validation failed, "+errorMessage);
 		return payload;
 	}
 
 	public boolean verifyTokenInfo(JWTPayload payload,Caller caller){
 		Date now = new Date();
 		if (now.getTime() - payload.getExpirationTime().getTime()  > tokenExpiryInterval){
+			errorMessage = "JWT token expired !!!";
 			log.error("JWT token expired !!!");
 			return false;
 		}
 
 		if (! payload.getIssuer().equals("AuthenticatorMS")){
+			errorMessage = "Invalid issuer of JWT token !!!";
 			log.error("Invalid issuer of JWT token !!!");
 			return false;
 		}
 		if (! payload.getAudience().contains(caller.getName())){
+			errorMessage = "Invalid caller of JWT token !!!";
 			log.error("Invalid caller of JWT token !!!");
 			return false;
 		}
 		String policyKey=caller.getHttpVerb()+caller.getResource();
 		if(! policy.containsKey(policyKey)){
+			errorMessage = "API is not configured in the policy document !!!";
 			log.error("API is not configured in the policy document !!!");
 			return false;
 		}
 		if (! policy.get(policyKey).contains(payload.getRole())){
+			errorMessage = "User has insufficient role !!!";
 			log.error("User has insufficient role !!!");
 			return false;
 		}
