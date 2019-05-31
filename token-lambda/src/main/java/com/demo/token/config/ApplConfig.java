@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -87,11 +88,11 @@ public class ApplConfig {
 	@Bean
 	public DynamoDBMapper dynamoDBMapper() {
 
-		//EndpointConfiguration endpointConfiguration = new EndpointConfiguration(serviceEndpoint,region);
+		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(serviceEndpoint,region);
 		System.out.println("creating dynamodb mapper...");
-		AmazonDynamoDB dynamoDB = AmazonDynamoDBClientBuilder.standard().build();
-		/*.withEndpointConfiguration(endpointConfiguration)
-				.build();*/
+		AmazonDynamoDB dynamoDB = AmazonDynamoDBClientBuilder.standard()
+				.withEndpointConfiguration(endpointConfiguration)
+				.build();
 		DynamoDBMapper dynamoDBMapper = new DynamoDBMapper(dynamoDB);
 		System.out.println("dynamodb mapper created.");
 		return dynamoDBMapper;

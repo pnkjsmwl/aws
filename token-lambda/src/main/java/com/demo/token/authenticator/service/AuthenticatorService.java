@@ -44,23 +44,22 @@ public class AuthenticatorService  {
 	@RequestMapping(value = "/signon", method = RequestMethod.POST)
 	public ResponseEntity<String> signon(@RequestBody Credentials credentials) {
 		try {
-			UserInfo user = new UserInfo("1982713", "pankaj", "test123", "121231231231", "PROFILE_ROLE");//userInfoRepo.findByUserName(credentials.getUserName());
-			/*if (user!=null) {*/
-			//if (util.validatePassword(credentials.getPassword(), user.getPassword())) {
-			if("test123".equals(credentials.getPassword())){
-				user.setArn(credentials.getArn());
-				String encryptedJWT = jweGenerator.generateJWE(null, user);
-				jweGenerator.cacheToken(encryptedJWT);
-				HttpHeaders headers = new HttpHeaders();
-				headers.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
-				return ResponseEntity.ok().headers(headers).body("{'Message':'Login Successful'}");
+			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUsername());
+			if (user!=null) {
+				if(util.validatePassword(credentials.getPassword(), user.getPassword())){
+					user.setArn(credentials.getArn());
+					String encryptedJWT = jweGenerator.generateJWE(null, user);
+					jweGenerator.cacheToken(encryptedJWT);
+					HttpHeaders headers = new HttpHeaders();
+					headers.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
+					return ResponseEntity.ok().headers(headers).body("{'Message':'Login Successful'}");
 
-			} else {
-				return ResponseEntity.badRequest().body("{'Error':'Invalid Password'}");
-			}
-			/* }else {
+				} else {
+					return ResponseEntity.badRequest().body("{'Error':'Invalid Password'}");
+				}
+			}else {
 				return ResponseEntity.badRequest().body("{'Error':'Invalid Username'}");
-			}*/
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(500).body("{'OOPS!!!  Error Occurred'}");
@@ -93,11 +92,8 @@ public class AuthenticatorService  {
 		if(user!=null) {
 			String passwordHash = util.generateHash(user.getPassword());
 			user.setPassword(passwordHash);
-			System.out.println("passwordHash : "+passwordHash);
 		}
-		System.out.println("Persisting user...");
 		UserInfo savedUser = dynamoDbRepo.save(user);
-		System.out.println("User persisted !!");
 		return ResponseEntity.status(200).body(savedUser);
 	}
 
