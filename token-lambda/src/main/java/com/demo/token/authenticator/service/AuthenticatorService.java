@@ -93,8 +93,11 @@ public class AuthenticatorService  {
 		if(user!=null) {
 			String passwordHash = util.generateHash(user.getPassword());
 			user.setPassword(passwordHash);
+			System.out.println("passwordHash : "+passwordHash);
 		}
+		System.out.println("Persisting user...");
 		UserInfo savedUser = dynamoDbRepo.save(user);
+		System.out.println("User persisted !!");
 		return ResponseEntity.status(200).body(savedUser);
 	}
 

@@ -9,10 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -42,10 +40,20 @@ public class ApplConfig {
 	@Value("${redis.port}")
 	private int redis_port;
 
+	@Value("${redis.timeout}")
+	private int redis_timeout;
+
+	@Bean
+	public static PropertySourcesPlaceholderConfigurer  propertySourcesPlaceholderConfigurer() {
+		PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer =  new PropertySourcesPlaceholderConfigurer();
+		propertySourcesPlaceholderConfigurer.setIgnoreResourceNotFound(true);
+		return propertySourcesPlaceholderConfigurer;
+	}
+
 	@Bean
 	public Jedis jedis() {
-		System.out.println("Redis HOST : "+redis_host);
-		return new Jedis(redis_host, redis_port);
+		System.out.println("Redis Timeout : "+redis_timeout);
+		return new Jedis(redis_host, redis_port, redis_timeout);
 	}
 
 	@Bean(name = "policy")
@@ -58,8 +66,8 @@ public class ApplConfig {
 		return policy;
 	}
 
-	@Bean
-	/* Similar to a JDBCTemplate */
+	/*@Bean
+	 Similar to a JDBCTemplate 
 	public DynamoDBMapper dynamoDBMapper() {
 		return new DynamoDBMapper(amazonDynamoDB());
 	}
@@ -74,15 +82,20 @@ public class ApplConfig {
 				.withCredentials(credentialsProvider)
 				.build();
 		return amazonDynamoDB;
-	}
-
-	/*public DynamoDB dynamoDB() {
-		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(serviceEndpoint,region);
-		DynamoDB dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard()
-				.withEndpointConfiguration(endpointConfiguration)
-				.build());
-		return dynamoDB;
 	}*/
+
+	@Bean
+	public DynamoDBMapper dynamoDBMapper() {
+
+		//EndpointConfiguration endpointConfiguration = new EndpointConfiguration(serviceEndpoint,region);
+		System.out.println("creating dynamodb mapper...");
+		AmazonDynamoDB dynamoDB = AmazonDynamoDBClientBuilder.standard().build();
+		/*.withEndpointConfiguration(endpointConfiguration)
+				.build();*/
+		DynamoDBMapper dynamoDBMapper = new DynamoDBMapper(dynamoDB);
+		System.out.println("dynamodb mapper created.");
+		return dynamoDBMapper;
+	}
 
 
 }
