@@ -128,11 +128,11 @@ public class JWEGenerator {
 		}
 	}
 
-	public boolean logoutUser(UserInfo user) {
-		String checkUser = jedis.get(user.getId());
+	public boolean logoutUser(String userId) {
+		String checkUser = jedis.get(userId);
 		System.out.println("checkUser : "+checkUser);
 		if("valid".equals(checkUser)) {
-			Long del = jedis.del(user.getId());
+			Long del = jedis.del(userId);
 			System.out.println("Key deleted from Redis : "+del);
 			return true;
 		}else {

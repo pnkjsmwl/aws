@@ -50,6 +50,24 @@ public class JWEValidator{
 	private boolean validToken = false;
 
 	public boolean validateToken(String JWEToken) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
+		
+		JWTPayload payload = extractTokenData(JWEToken);
+
+		System.out.println("Key to Redis : "+payload.getUserId());
+		String tokenValueFromRedis = jedis.get(payload.getUserId());
+		System.out.println("Value from redis against token : "+tokenValueFromRedis);
+
+		if(tokenValueFromRedis==null)
+			throw new IllegalAccessException("JWT token validation failed, not found in Cache.");
+		else if(!verifyTokenInfo(payload))
+			throw new IllegalAccessException("JWT token validation failed, "+errorMessage);
+		else if(tokenValue.equals(tokenValueFromRedis))
+			validToken = true;
+
+		return validToken;
+	}
+
+	public JWTPayload extractTokenData(String JWEToken) throws ParseException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
 		EncryptedJWT jwt = EncryptedJWT.parse(JWEToken);
 		RSAPrivateKey privateKey = getPrivateKey("private_key.pem");
 		RSADecrypter decrypter = new RSADecrypter(privateKey);
@@ -66,19 +84,7 @@ public class JWEValidator{
 		payload.setIssuer(jwtClaimsSet.getIssuer());
 		payload.setJwtID(jwtClaimsSet.getJWTID());
 		payload.setSubject(jwtClaimsSet.getSubject());
-
-		System.out.println("Key to Redis : "+payload.getUserId());
-		String tokenValueFromRedis = jedis.get(payload.getUserId());
-		System.out.println("Value from redis against token : "+tokenValueFromRedis);
-
-		if(tokenValueFromRedis==null)
-			throw new IllegalAccessException("JWT token validation failed, not found in Cache.");
-		else if(!verifyTokenInfo(payload))
-			throw new IllegalAccessException("JWT token validation failed, "+errorMessage);
-		else if(tokenValue.equals(tokenValueFromRedis))
-			validToken = true;
-
-		return validToken;
+		return payload;
 	}
 
 	public boolean verifyTokenInfo(JWTPayload payload){

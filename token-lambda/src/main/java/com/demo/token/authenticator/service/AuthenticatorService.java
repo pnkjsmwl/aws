@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.demo.token.authenticator.utils.CommonUtils;
 import com.demo.token.dao.Credentials;
+import com.demo.token.dao.JWTPayload;
 import com.demo.token.dao.UserInfo;
 import com.demo.token.dao.repo.DynamoDbRepo;
 import com.nimbusds.jose.JOSEException;
@@ -81,18 +82,18 @@ public class AuthenticatorService  {
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public ResponseEntity<String> logout(@RequestBody Credentials credentials) {
+	public ResponseEntity<String> logout(String jwtToken) {
 		try {
-			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUsername());
-			if (user!=null) {
-				user.setArn(credentials.getArn());
-				if(jweGenerator.logoutUser(user)) {
+			JWTPayload tokenPayload = jweValidator.extractTokenData(jwtToken);
+			if (tokenPayload!=null && jweValidator.verifyTokenInfo(tokenPayload)) {
+
+				if(jweGenerator.logoutUser(tokenPayload.getUserId() )) {
 					return ResponseEntity.ok().body("{'Message':'Logout Successful'}");
 				}else {
 					return ResponseEntity.ok().body("{'Message':'Logout Unsuccessful'}");
 				}
 			}else {
-				return ResponseEntity.badRequest().body("{'Error':'Invalid Username'}");
+				return ResponseEntity.badRequest().body("{'Message':'Invalid Username or Expired Token'}");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
