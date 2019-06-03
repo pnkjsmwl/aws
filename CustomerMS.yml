@@ -8,3 +8,8 @@ authorizer:
 server:
   port: 9093
 message1: "Hello from config server"
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
