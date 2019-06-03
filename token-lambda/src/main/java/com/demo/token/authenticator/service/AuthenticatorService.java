@@ -1,7 +1,10 @@
 package com.demo.token.authenticator.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.text.ParseException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -9,36 +12,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.demo.token.authenticator.utils.CommonUtils;
-import com.demo.token.dao.Caller;
 import com.demo.token.dao.Credentials;
 import com.demo.token.dao.UserInfo;
 import com.demo.token.dao.repo.DynamoDbRepo;
-
-import redis.clients.jedis.Jedis;
+import com.nimbusds.jose.JOSEException;
 
 @RestController
 public class AuthenticatorService  {
-	private Log log = LogFactory.getLog(AuthenticatorService.class);
+	//private Log log = LogFactory.getLog(AuthenticatorService.class);
 
 	private JWEGenerator jweGenerator;
 	private JWEValidator jweValidator;
 	private DynamoDbRepo dynamoDbRepo;
 	private CommonUtils util;
-	private Jedis jedis;
 
 	@Autowired
-	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util, Jedis jedis) {
+	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util) {
 		this.jweGenerator = jweGenerator;
 		this.jweValidator = jweValidator;
 		this.dynamoDbRepo = dynamoDbRepo;
 		this.util = util;
-		this.jedis = jedis;
 	}
 
 	@RequestMapping(value = "/signon", method = RequestMethod.POST)
@@ -49,10 +47,11 @@ public class AuthenticatorService  {
 				if(util.validatePassword(credentials.getPassword(), user.getPassword())){
 					user.setArn(credentials.getArn());
 					String encryptedJWT = jweGenerator.generateJWE(null, user);
-					jweGenerator.cacheToken(encryptedJWT);
-					HttpHeaders headers = new HttpHeaders();
-					headers.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
-					return ResponseEntity.ok().headers(headers).body("{'Message':'Login Successful'}");
+					jweGenerator.cacheSignon(user);
+					HttpHeaders header = new HttpHeaders();
+					header.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
+					header.add("REGION", credentials.getArn().split(":")[3]);
+					return ResponseEntity.ok().headers(header).body("{'Message':'Login Successful'}");
 
 				} else {
 					return ResponseEntity.badRequest().body("{'Error':'Invalid Password'}");
@@ -66,26 +65,41 @@ public class AuthenticatorService  {
 		}
 	}
 
-	@RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
-	public ResponseEntity<?> validate(@RequestHeader("Authorization") String jwtToken, @RequestBody Caller caller) {
-		try{
-			String tokenFromRedis = jedis.get(caller.getAuthorizationToken());
-			log.info("Value from redis against token : "+tokenFromRedis);
-			System.out.println("Value from redis against token : "+tokenFromRedis);
-			if(tokenFromRedis!=null)
-			{
-				return ResponseEntity.ok().body(jweValidator.validateToken(caller.getAuthorizationToken(), caller));
-			}
-		}catch(IllegalAccessException e){
+	//@RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
+	public boolean validate(String jwtToken) {
+		try {
+			return jweValidator.validateToken(jwtToken);
+
+		}catch(IllegalAccessException | NoSuchAlgorithmException |InvalidKeySpecException |ParseException | IOException | JOSEException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(403).body("Unauthorized access");
-		}
-		catch(Exception e){
+			return false;
+		} catch(Exception e) {
 			e.printStackTrace();
-			return ResponseEntity.status(500).body("Server side error");
+			return false;
 		}
-		return ResponseEntity.status(403).body("Unauthorized access");
+
 	}
+
+	@RequestMapping(value = "/logout", method = RequestMethod.POST)
+	public ResponseEntity<String> logout(@RequestBody Credentials credentials) {
+		try {
+			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUsername());
+			if (user!=null) {
+				user.setArn(credentials.getArn());
+				if(jweGenerator.logoutUser(user)) {
+					return ResponseEntity.ok().body("{'Message':'Logout Successful'}");
+				}else {
+					return ResponseEntity.ok().body("{'Message':'Logout Unsuccessful'}");
+				}
+			}else {
+				return ResponseEntity.badRequest().body("{'Error':'Invalid Username'}");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body("{'OOPS!!!  Error Occurred'}");
+		}
+	}
+
 
 	@PostMapping("/user/add")
 	public ResponseEntity<UserInfo> add(@RequestBody UserInfo user){

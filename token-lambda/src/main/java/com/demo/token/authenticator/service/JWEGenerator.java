@@ -39,8 +39,8 @@ public class JWEGenerator {
 	@Value("${tokenExpiryInterval}")
 	private long tokenExpiryInterval;
 
-	@Value("${token_message}")
-	private String token_message;
+	@Value("${token_value}")
+	private String token_value;
 
 	@Autowired
 	private Jedis jedis;
@@ -58,6 +58,7 @@ public class JWEGenerator {
 				.issueTime(now)
 				.claim("accountNumber", userInfo.getAccountNumber())
 				.claim("region", arn[3]) // adding AWS region fetched from AWS context
+				.claim("userId", userInfo.getId()) // this will be validated against Redis cache
 				.jwtID(UUID.randomUUID().toString())
 				.claim("role", userInfo.getRole());
 
@@ -109,7 +110,7 @@ public class JWEGenerator {
 		return jwt.serialize();
 	}
 
-	public void cacheToken(String encryptedJWT) {
+	public void cacheSignon(UserInfo user) {
 		try {
 			/*
 			 * final Map<String, String> tokenMap = new HashMap<>();
@@ -117,13 +118,26 @@ public class JWEGenerator {
 			 * jedis.hmset("user_jwt_payload", tokenMap);
 			 */
 
-			jedis.set(encryptedJWT, token_message);
-			System.out.println("Value from redis : "+jedis.get(encryptedJWT));
+			jedis.set(user.getId(), token_value);
+			System.out.println("Value from redis : "+jedis.get(user.getId()));
 			jedis.close();
 
 		}catch(Exception e)
 		{
 			e.printStackTrace();
 		}
+	}
+
+	public boolean logoutUser(UserInfo user) {
+		String checkUser = jedis.get(user.getId());
+		System.out.println("checkUser : "+checkUser);
+		if("valid".equals(checkUser)) {
+			Long del = jedis.del(user.getId());
+			System.out.println("Key deleted from Redis : "+del);
+			return true;
+		}else {
+			return false;
+		}
+		
 	}
 }

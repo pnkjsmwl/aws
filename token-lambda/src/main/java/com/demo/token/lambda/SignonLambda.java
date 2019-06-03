@@ -9,12 +9,11 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
-import com.demo.token.dao.Caller;
+import com.demo.token.dao.Credentials;
 
-public class ValidateToken implements RequestHandler<Caller, ResponseEntity<?>> {
+public class SignonLambda implements RequestHandler<Credentials, ResponseEntity<String>> {
 
-	@Override
-	public ResponseEntity<?> handleRequest(Caller caller, Context context) {
+	public ResponseEntity<String> handleRequest(Credentials cred, Context context) {
 		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
 		LambdaLogger logger = context.getLogger();
 
@@ -23,21 +22,20 @@ public class ValidateToken implements RequestHandler<Caller, ResponseEntity<?>> 
 		 * eg. arn:aws:dynamodb:us-east-2:161770494564:table/user_info
 		 *  */
 		String invokedFunctionArn = context.getInvokedFunctionArn();
-		ResponseEntity<?> response = null;
+		ResponseEntity<String> response = null;
 		String invokedLambda = invokedFunctionArn.split(":")[6];
 		logger.log("invokedFunctionArn : "+invokedFunctionArn +", invokedLambda : "+invokedLambda);
-		logger.log("Headers : "+caller.getHeaders());
+
 		AuthenticatorService authenticatorService = appContext.getBean(AuthenticatorService.class);
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
-		//cred.setArn(invokedFunctionArn);
+		cred.setArn(invokedFunctionArn);
 		if(authenticatorService!=null) {
-			String jwtToken = caller.getHeaders().get("Authorization");
-			response = authenticatorService.validate(jwtToken , caller);
+
+			response = authenticatorService.signon(cred);
 			if(response!=null) 
 				logger.log("Body : "+response.getBody());
 		}
 		((AnnotationConfigApplicationContext) appContext).close();
 		return response;
 	}
-
 }

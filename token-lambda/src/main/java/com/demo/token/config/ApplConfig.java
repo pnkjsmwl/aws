@@ -41,7 +41,7 @@ public class ApplConfig {
 	@Value("${redis.port}")
 	private int redis_port;
 
-	@Value("${redis.timeout}")
+	@Value("${REDIS_TIMEOUT}")
 	private int redis_timeout;
 
 	@Bean

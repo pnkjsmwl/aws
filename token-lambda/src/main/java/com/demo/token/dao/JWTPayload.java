@@ -12,6 +12,7 @@ public class JWTPayload{
     private String accountNumber;
     private String jwtID;
     private String role;
+    private String userId;
 	public String getIssuer() {
 		return issuer;
 	}
@@ -59,6 +60,12 @@ public class JWTPayload{
 	}
 	public void setRole(String role) {
 		this.role = role;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
     
     
