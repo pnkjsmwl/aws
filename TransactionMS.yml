@@ -8,10 +8,3 @@ management:
     web:
       exposure:
         include: "*"
-tokenExpiryInterval: 600000
-token_message: valid
-policy:
-  GET:
-   summary: CUSTOMER_ROLE, ADMIN_ROLE
-   recent: CUSTOMER_ROLE
-   last: CUSTOMER_ROLE
