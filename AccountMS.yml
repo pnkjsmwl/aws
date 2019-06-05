@@ -1,6 +1,6 @@
 spring:
   application:
-    name: AccountsMS
+    name: AccountMS
 server:
   port: 9095
 management:
