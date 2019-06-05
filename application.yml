@@ -2,16 +2,15 @@ tokenExpiryInterval: 600000
 token_message: valid
 
 policy:
-  GET:
-   account:
-    summary: CUSTOMER_ROLE, ADMIN_ROLE
-    current_balance: CUSTOMER_ROLE
-    due: CUSTOMER_ROLE
-   transaction:
-    summary: CUSTOMER_ROLE, ADMIN_ROLE
-    recent: CUSTOMER_ROLE
-    last: CUSTOMER_ROLE
-   profile:
-    email: CUSTOMER_ROLE
-    mobile: CUSTOMER_ROLE
-    address: CUSTOMER_ROLE
+  account:
+   summary: CUSTOMER_ROLE, ADMIN_ROLE
+   current_balance: CUSTOMER_ROLE
+   due: CUSTOMER_ROLE
+  transaction:
+   summary: CUSTOMER_ROLE, ADMIN_ROLE
+   recent: CUSTOMER_ROLE
+   last: CUSTOMER_ROLE
+  profile:
+   email: CUSTOMER_ROLE
+   mobile: CUSTOMER_ROLE
+   address: CUSTOMER_ROLE
