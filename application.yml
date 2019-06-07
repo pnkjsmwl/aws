@@ -1,6 +1,8 @@
 tokenExpiryInterval: 600000
 token_message: valid
-
+redis:
+  timeout:
+    interval: ${REDIS_KEY_TIMEOUT:900} # in seconds
 policy:
   account:
    summary: CUSTOMER_ROLE, ADMIN_ROLE
