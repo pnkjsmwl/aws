@@ -1,6 +1,6 @@
 tokenExpiryInterval: 600000
 token_message: valid
-redis:
+jedis:
   timeout:
     interval: ${REDIS_KEY_TIMEOUT:900} # in seconds
 policy:
