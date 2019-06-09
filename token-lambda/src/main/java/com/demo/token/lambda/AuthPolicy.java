@@ -89,6 +89,19 @@ package com.demo.token.lambda;
 	     *   the RestApi identifier
 	     *   and the Stage on the RestApi that the Policy will apply to
 	     */
+	    
+	    public static class Context {
+	    	private String token;
+
+			public String getToken() {
+				return token;
+			}
+
+			public void setToken(String token) {
+				this.token = token;
+			}
+	    	
+	    }
 	    public static class PolicyDocument {
 
 	        static final String EXECUTE_API_ARN_FORMAT = "arn:aws:execute-api:%s:%s:%s/%s/%s/%s";

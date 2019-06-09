@@ -10,7 +10,7 @@ import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
 import com.demo.token.dao.UserInfo;
 
-public class UserLambda implements RequestHandler<UserInfo, ResponseEntity<?>> {
+public class RegistrationLambda implements RequestHandler<UserInfo, ResponseEntity<?>> {
 
 	
 	@Override
@@ -20,7 +20,7 @@ public class UserLambda implements RequestHandler<UserInfo, ResponseEntity<?>> {
 		AuthenticatorService authenticatorService = appContext.getBean(AuthenticatorService.class);
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 
-		ResponseEntity<UserInfo> respEntity = authenticatorService.add(userInfo);
+		ResponseEntity<UserInfo> respEntity = authenticatorService.register(userInfo);
 		((AnnotationConfigApplicationContext) appContext).close();
 		return respEntity;
 	}

@@ -50,11 +50,11 @@ public class JWEValidator{
 	private boolean validToken = false;
 
 	public boolean validateToken(String JWEToken) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
-		
+
 		JWTPayload payload = extractTokenData(JWEToken);
 
-		System.out.println("Key to Redis : "+payload.getUserId());
-		String tokenValueFromRedis = jedis.get(payload.getUserId());
+		System.out.println("Key to Redis : "+payload.getUserName());
+		String tokenValueFromRedis = jedis.get(payload.getUserName());
 		System.out.println("Value from redis against token : "+tokenValueFromRedis);
 
 		if(tokenValueFromRedis==null)
@@ -77,7 +77,7 @@ public class JWEValidator{
 		JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
 		payload.setAccountNumber(jwtClaimsSet.getStringClaim("accountNumber"));
 		payload.setRole(jwtClaimsSet.getStringClaim("role"));
-		payload.setUserId(jwtClaimsSet.getStringClaim("userId"));
+		payload.setUserName(jwtClaimsSet.getStringClaim("userName"));
 		payload.setAudience(jwtClaimsSet.getAudience());
 		payload.setExpirationTime(jwtClaimsSet.getExpirationTime());
 		payload.setIssueTime(jwtClaimsSet.getIssueTime());

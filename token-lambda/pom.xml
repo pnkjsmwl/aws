@@ -56,7 +56,6 @@
 			<artifactId>aws-java-sdk-dynamodb</artifactId>
 			<version>1.11.475</version>
 		</dependency>
-
 		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>

@@ -56,11 +56,11 @@ public class JWEGenerator {
 				.expirationTime(new Date(now.getTime() + tokenExpiryInterval)) // expires in 10 minutes
 				.notBeforeTime(now)
 				.issueTime(now)
-				.claim("accountNumber", userInfo.getAccountNumber())
 				.claim("region", arn[3]) // adding AWS region fetched from AWS context
-				.claim("userId", userInfo.getId()) // this will be validated against Redis cache
+				.claim("userName", userInfo.getUserName()) // this will be validated against Redis cache
+				.claim("role", "CUSTOMER_ROLE") // this is default role for all users
 				.jwtID(UUID.randomUUID().toString())
-				.claim("role", userInfo.getRole());
+				;
 
 		if (data != null) {
 			for (Map.Entry<String, String> e : data.entrySet()) {
@@ -112,14 +112,9 @@ public class JWEGenerator {
 
 	public void cacheSignon(UserInfo user) {
 		try {
-			/*
-			 * final Map<String, String> tokenMap = new HashMap<>();
-			 * tokenMap.put(encryptedJWT, token_message); String hmset =
-			 * jedis.hmset("user_jwt_payload", tokenMap);
-			 */
-
-			jedis.set(user.getId(), token_value);
-			System.out.println("Value from redis : "+jedis.get(user.getId()));
+			System.out.println("Redis Key : "+user.getUserName());
+			jedis.set(user.getUserName(), token_value);
+			System.out.println("Value from redis : "+jedis.get(user.getUserName()));
 			jedis.close();
 
 		}catch(Exception e)
@@ -138,6 +133,6 @@ public class JWEGenerator {
 		}else {
 			return false;
 		}
-		
+
 	}
 }

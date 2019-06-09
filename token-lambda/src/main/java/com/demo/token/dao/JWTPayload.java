@@ -12,7 +12,7 @@ public class JWTPayload{
     private String accountNumber;
     private String jwtID;
     private String role;
-    private String userId;
+    private String userName;
 	public String getIssuer() {
 		return issuer;
 	}
@@ -61,12 +61,13 @@ public class JWTPayload{
 	public void setRole(String role) {
 		this.role = role;
 	}
-	public String getUserId() {
-		return userId;
+	public String getUserName() {
+		return userName;
 	}
-	public void setUserId(String userId) {
-		this.userId = userId;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
+	
     
     
     

@@ -56,7 +56,7 @@ public class ApplConfig {
 		System.out.println("Redis Timeout : "+redis_timeout);
 		return new Jedis(redis_host, redis_port, redis_timeout);
 	}
-
+	
 	@Bean(name = "policy")
 	public HashMap<String, List<String>> getPolicy() {
 		HashMap<String,List<String>> policy = new HashMap<>();
