@@ -6,7 +6,7 @@ endpoints:
 authorizer:
   enabled: true
 server:
-  port: 9093
+  port: 9097
 message1: "Hello from config server"
 management:
   endpoints:
