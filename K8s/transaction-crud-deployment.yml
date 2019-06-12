@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: transaction-crud
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: transaction-crud
+    spec:
+      containers:
+      - name: transaction-crud
+        image: pnkjsmwl/transaction-crud:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8096
+      imagePullSecrets:
+      - name: my-sec
