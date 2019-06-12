@@ -31,7 +31,7 @@ public class LogoutLambda implements RequestHandler<TokenAuthRequest, ResponseEn
 				jwtToken = header.get("Authorization");
 			}
 			System.out.println("jwtToken from request : "+jwtToken);
-			response = authenticatorService.logout(jwtToken);
+			response = authenticatorService.logout(jwtToken, context);
 			if(response!=null) 
 				logger.log("Body : "+response.getBody());
 		}

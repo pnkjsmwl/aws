@@ -46,6 +46,7 @@ public class DynamoDbRepo {
 	}
 
 	public UserInfo getUserByUserName(String userName) {
+		System.out.println("dynamoDBMapper : "+dynamoDBMapper);
 		UserInfo userFromDb = dynamoDBMapper.load(UserInfo.class, userName);
 		System.out.println("User loaded from DB !!");
 		return userFromDb;

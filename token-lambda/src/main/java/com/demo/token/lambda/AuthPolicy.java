@@ -93,10 +93,12 @@ package com.demo.token.lambda;
 	    public static class Context {
 	    	private String token;
 
+			public Context(String token) {
+				this.token = token;
+			}
 			public String getToken() {
 				return token;
 			}
-
 			public void setToken(String token) {
 				this.token = token;
 			}

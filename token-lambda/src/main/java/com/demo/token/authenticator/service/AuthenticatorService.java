@@ -6,6 +6,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +20,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.amazonaws.services.lambda.runtime.Context;
+import com.demo.token.authenticator.exception.InvalidTokenException;
 import com.demo.token.authenticator.utils.CommonUtils;
+import com.demo.token.dao.APIGatewayProxyRequest;
 import com.demo.token.dao.APIGatewayProxyResponse;
 import com.demo.token.dao.Credentials;
 import com.demo.token.dao.JWTPayload;
 import com.demo.token.dao.UserInfo;
 import com.demo.token.dao.repo.DynamoDbRepo;
+import com.google.gson.Gson;
 import com.nimbusds.jose.JOSEException;
 
 @RestController
@@ -35,24 +40,30 @@ public class AuthenticatorService  {
 	private JWEValidator jweValidator;
 	private DynamoDbRepo dynamoDbRepo;
 	private CommonUtils util;
+	private Gson gson;
 
 	@Autowired
-	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util) {
+	public AuthenticatorService(JWEGenerator jweGenerator, JWEValidator jweValidator, DynamoDbRepo dynamoDbRepo, CommonUtils util, Gson gson) {
 		this.jweGenerator = jweGenerator;
 		this.jweValidator = jweValidator;
 		this.dynamoDbRepo = dynamoDbRepo;
 		this.util = util;
+		this.gson = gson;
 	}
+
 
 	@RequestMapping(value = "/signon", method = RequestMethod.POST)
 	public ResponseEntity<String> signon(@RequestBody Credentials credentials) {
 		try {
-			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUsername());
+			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUserName());
 			if (user!=null) {
 				if(util.validatePassword(credentials.getPassword(), user.getPassword())){
 					user.setArn(credentials.getArn());
+					user.setRedisKey(user.getUserName()+":"+UUID.randomUUID().toString());
 					String encryptedJWT = jweGenerator.generateJWE(null, user);
-					jweGenerator.cacheSignon(user);
+
+					jweGenerator.addToCache(user);
+
 					HttpHeaders header = new HttpHeaders();
 					header.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
 					header.add("Region", credentials.getArn().split(":")[3]);
@@ -73,36 +84,41 @@ public class AuthenticatorService  {
 	}
 
 	@RequestMapping(value = "/signon2", method = RequestMethod.POST)
-	public APIGatewayProxyResponse signon2(@RequestBody Credentials credentials) {
-		Map<String, String> header2 = new HashMap<String,String>();
-		header2.put(HttpHeaders.AUTHORIZATION, "dummy value");
-		
+	public APIGatewayProxyResponse signon2(@RequestBody APIGatewayProxyRequest request, Context context) {
 		try {
-			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUsername());
-			
+			Credentials cred = gson.fromJson(request.getBody(), Credentials.class);
+			System.out.println("User from request : "+cred.getUserName());
+			UserInfo user = dynamoDbRepo.getUserByUserName(cred.getUserName());
+
 			if (user!=null) {
-				if(util.validatePassword(credentials.getPassword(), user.getPassword())){
-					user.setArn(credentials.getArn());
+				if(util.validatePassword(cred.getPassword(), user.getPassword())){
+					user.setArn(context.getInvokedFunctionArn());
+					user.setRedisKey(user.getUserName()+":"+UUID.randomUUID().toString());
 					String encryptedJWT = jweGenerator.generateJWE(null, user);
-					jweGenerator.cacheSignon(user);
+
+					jweGenerator.addToCache(user);
+
+					System.out.println("ARN : "+user.getArn());
 
 					Map<String, String> header = new HashMap<String,String>();
 					header.put(HttpHeaders.AUTHORIZATION, encryptedJWT);
-					header.put("Region", credentials.getArn().split(":")[3]);
+					header.put("Region", user.getArn().split(":")[3]);
 					header.put("AccountId", user.getAccountNumber());
 					header.put("AccountNumber", getLastNDigit(user.getAccountNumber(), 4));
 
 					return new APIGatewayProxyResponse(200, header, "Message : Login Successful", true);
 
 				} else {
-					return new APIGatewayProxyResponse(403, header2, "Error : Invalid Password", true);
+					return new APIGatewayProxyResponse(403, null, "Error : Invalid Password", true);
 				}
 			}else {
-				return new APIGatewayProxyResponse(403, header2, "Error : Invalid Username", true);
+				return new APIGatewayProxyResponse(403, null, "Error : Invalid Username", true);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new APIGatewayProxyResponse(500, header2, "OOPS !!! Error Occurred", true);
+			Map<String, String> header2 = new HashMap<String,String>();
+			header2.put("Error", e.getMessage());
+			return new APIGatewayProxyResponse(500, null, "OOPS !!! Error Occurred", true);
 		}
 	}
 
@@ -113,27 +129,55 @@ public class AuthenticatorService  {
 	}
 
 	//@RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
-	public boolean validate(String jwtToken) {
+	public String validate(String jwtToken, String invokedFunctionArn) throws Exception {
+
 		try {
-			return jweValidator.validateToken(jwtToken);
+			String region_current = invokedFunctionArn.split(":")[3];
+			System.out.println("Current Region : "+region_current);
+
+			JWTPayload jwtPayload = jweValidator.validateToken(jwtToken, region_current);
+			String newEncryptedJWT = null;
+			/*
+			 * If token is valid and present in Redis then
+			 * 1. remove existing key from redis.
+			 * 2. create new token.
+			 * 3. store new token in redis.
+			 * */
+
+			if(jwtPayload.isValid())
+			{
+				System.out.println("User found in different region : "+jwtPayload.isFoundInDiffRegion());
+				jweGenerator.removeFromCache(jwtPayload.getRedisKey(), jwtPayload.isFoundInDiffRegion());
+
+				UserInfo user = new UserInfo(jwtPayload.getUserName(), invokedFunctionArn);
+				user.setRedisKey(user.getUserName()+":"+UUID.randomUUID().toString());
+				newEncryptedJWT = jweGenerator.generateJWE(null, user);
+
+				jweGenerator.addToCache(user);
+
+			}else {
+				throw new InvalidTokenException("Token not valid !!");
+			}
+			return newEncryptedJWT;
 
 		}catch(IllegalAccessException | NoSuchAlgorithmException |InvalidKeySpecException |ParseException | IOException | JOSEException e) {
 			e.printStackTrace();
-			return false;
+			throw e;
 		} catch(Exception e) {
 			e.printStackTrace();
-			return false;
+			throw e;
 		}
 
 	}
 
 	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public ResponseEntity<String> logout(String jwtToken) {
+	public ResponseEntity<String> logout(String jwtToken, Context context) {
 		try {
 			JWTPayload tokenPayload = jweValidator.extractTokenData(jwtToken);
 			if (tokenPayload!=null && jweValidator.verifyTokenInfo(tokenPayload)) {
-
-				if(jweGenerator.logoutUser(tokenPayload.getUserName())) {
+				String request_region = context.getInvokedFunctionArn().split(":")[3];
+				System.out.println("Request region : "+request_region+", Token latest region : "+tokenPayload.getRegionLatest());
+				if(jweGenerator.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()))) {
 					return ResponseEntity.ok().body("{'Message':'Logout Successful'}");
 				}else {
 					return ResponseEntity.ok().body("{'Message':'Logout Unsuccessful'}");

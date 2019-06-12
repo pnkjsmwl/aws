@@ -1,5 +1,8 @@
 package com.demo.token.lambda;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -10,10 +13,11 @@ import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
 import com.demo.token.dao.TokenAuthRequest;
 
-public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPolicy> {
+public class Validate2Lambda implements RequestHandler<TokenAuthRequest, Map<String, Object>> {
 
+	private String newJWTToken;
 	@Override
-	public AuthPolicy handleRequest(TokenAuthRequest input, Context context) {
+	public Map<String, Object> handleRequest(TokenAuthRequest input, Context context) {
 		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
 		LambdaLogger logger = context.getLogger();
 
@@ -27,14 +31,7 @@ public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPoli
 		String principalId = "xxxx";
 
 		String methodArn = input.getMethodArn();
-		String[] arnPartials = methodArn.split(":");
 
-		String region = arnPartials[3];
-		String awsAccountId = arnPartials[4];
-		String[] apiGatewayArnPartials = arnPartials[5].split("/");
-
-		String restApiId = apiGatewayArnPartials[0];
-		String stage = apiGatewayArnPartials[1];
 		String invokedFunctionArn = context.getInvokedFunctionArn();
 		String invokedLambda = invokedFunctionArn.split(":")[6];
 
@@ -45,22 +42,46 @@ public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPoli
 		try {
 			if(authenticatorService!=null) {
 				String jwtToken = input.getAuthorizationToken();
-				if(authenticatorService.validate(jwtToken, invokedFunctionArn)!=null) {
-					closeAppContext(appContext);
-					return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getAllowAllPolicy(region, awsAccountId, restApiId, stage));
-				}
+				newJWTToken  = authenticatorService.validate(jwtToken, invokedFunctionArn);
+
+				System.out.println("Old token : "+jwtToken);
+				System.out.println("New Token : "+newJWTToken);
+
+				closeAppContext(appContext);
+				return generatePolicy(principalId, "Allow", methodArn);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getDenyAllPolicy(region, awsAccountId, restApiId, stage));
+			return generatePolicy(principalId, "Deny", methodArn);
 		}
 		closeAppContext(appContext);
-		return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getDenyAllPolicy(region, awsAccountId, restApiId, stage));
+		return generatePolicy(principalId, "Deny", methodArn);
 	}
 
 	private void closeAppContext(ApplicationContext appContext) {
 		((AnnotationConfigApplicationContext) appContext).close();
 
+	}
+
+	private Map<String, Object> generatePolicy(String principalId, String effect, String resource) {
+		Map<String, Object> authResponse = new HashMap<>();
+		authResponse.put("principalId", principalId);
+
+		Map<String, Object> policyDocument = new HashMap<>();
+		policyDocument.put("Version", "2012-10-17");
+		Map<String, String> statementOne = new HashMap<>();
+		statementOne.put("Action", "execute-api:Invoke");
+		statementOne.put("Effect", effect);
+		statementOne.put("Resource", resource);
+		policyDocument.put("Statement", new Object[] {statementOne});
+		authResponse.put("policyDocument", policyDocument);
+
+		if ("Allow".equals(effect)) {
+			Map<String, Object> context = new HashMap<>();
+			context.put("token", newJWTToken);
+			authResponse.put("context", context);
+		}
+		return authResponse;
 	}
 
 

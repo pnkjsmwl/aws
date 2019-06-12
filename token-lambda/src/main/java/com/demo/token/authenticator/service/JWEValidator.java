@@ -40,31 +40,55 @@ public class JWEValidator{
 	private HashMap<String,List<String>> policy;
 
 	@Autowired
+	@Qualifier("jedis")
 	private Jedis jedis;
+
+	@Autowired
+	@Qualifier("jedis_sec")
+	private Jedis jedis_sec;
 
 	@Value("${token_value}")
 	private String tokenValue;
 
 	private Log log = LogFactory.getLog(JWEValidator.class);
 	private String errorMessage;
-	private boolean validToken = false;
 
-	public boolean validateToken(String JWEToken) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
+	public JWTPayload validateToken(String JWEToken, String region_current) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
 
 		JWTPayload payload = extractTokenData(JWEToken);
-
-		System.out.println("Key to Redis : "+payload.getUserName());
-		String tokenValueFromRedis = jedis.get(payload.getUserName());
-		System.out.println("Value from redis against token : "+tokenValueFromRedis);
+		System.out.println("Region created : "+payload.getRegionCreated());
+		String tokenValueFromRedis = "";
+		if(region_current.equals(payload.getRegionLatest()))
+			tokenValueFromRedis = tokenValueFromRedis(payload, region_current);
 
 		if(tokenValueFromRedis==null)
 			throw new IllegalAccessException("JWT token validation failed, not found in Cache.");
 		else if(!verifyTokenInfo(payload))
 			throw new IllegalAccessException("JWT token validation failed, "+errorMessage);
 		else if(tokenValue.equals(tokenValueFromRedis))
-			validToken = true;
+			payload.setValid(true);
+		return payload;
+	}
 
-		return validToken;
+	private String tokenValueFromRedis(JWTPayload payload, String region_current) {
+		System.out.println("Key to Redis : "+payload.getRedisKey());
+		String tokenValueFromRedis = jedis.get(payload.getRedisKey());
+		System.out.println("Value from Primary redis against token : "+tokenValueFromRedis);
+
+		/* If value not found in primary redis then 
+		 * 1. access Redis of diff region and create an entry there 
+		 * 2. update token with RegionLatest as region_current 
+		 * */
+		if(tokenValueFromRedis==null) {
+			tokenValueFromRedis = jedis_sec.get(payload.getRedisKey());
+			if(tokenValueFromRedis!=null) {
+				payload.setFoundInDiffRegion(true);
+				payload.setRegionLatest(region_current);
+			}
+			System.out.println("Value from Secondary redis against token : "+tokenValueFromRedis);
+		}
+
+		return tokenValueFromRedis;
 	}
 
 	public JWTPayload extractTokenData(String JWEToken) throws ParseException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
@@ -84,6 +108,9 @@ public class JWEValidator{
 		payload.setIssuer(jwtClaimsSet.getIssuer());
 		payload.setJwtID(jwtClaimsSet.getJWTID());
 		payload.setSubject(jwtClaimsSet.getSubject());
+		payload.setRedisKey(jwtClaimsSet.getStringClaim("userName-key"));
+		payload.setRegionCreated(jwtClaimsSet.getStringClaim("region_created"));
+		payload.setRegionLatest(jwtClaimsSet.getStringClaim("region_latest"));
 		return payload;
 	}
 

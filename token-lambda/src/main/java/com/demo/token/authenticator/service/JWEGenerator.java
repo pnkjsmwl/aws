@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -26,11 +27,9 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 
 @Component
-@Slf4j
 public class JWEGenerator {
 
 	@Value("${spring.application.name}")
@@ -43,7 +42,12 @@ public class JWEGenerator {
 	private String token_value;
 
 	@Autowired
+	@Qualifier("jedis")
 	private Jedis jedis;
+
+	@Autowired
+	@Qualifier("jedis_sec")
+	private Jedis jedis_sec;
 
 	public JWTClaimsSet buildClaimSet(Map<String, String> data, UserInfo userInfo) {
 		// Session id yet to add
@@ -56,9 +60,11 @@ public class JWEGenerator {
 				.expirationTime(new Date(now.getTime() + tokenExpiryInterval)) // expires in 10 minutes
 				.notBeforeTime(now)
 				.issueTime(now)
-				.claim("region", arn[3]) // adding AWS region fetched from AWS context
+				.claim("region_created", arn[3]) // adding AWS region fetched from AWS context
+				.claim("region_latest", arn[3]) // adding AWS region fetched from AWS context
 				.claim("userName", userInfo.getUserName()) // this will be validated against Redis cache
 				.claim("role", "CUSTOMER_ROLE") // this is default role for all users
+				.claim("userName-key", userInfo.getRedisKey()) // this is key for Redis
 				.jwtID(UUID.randomUUID().toString())
 				;
 
@@ -110,29 +116,30 @@ public class JWEGenerator {
 		return jwt.serialize();
 	}
 
-	public void cacheSignon(UserInfo user) {
-		try {
-			System.out.println("Redis Key : "+user.getUserName());
-			jedis.set(user.getUserName(), token_value);
-			System.out.println("Value from redis : "+jedis.get(user.getUserName()));
-			jedis.close();
-
-		}catch(Exception e)
-		{
-			e.printStackTrace();
-		}
+	public void addToCache(UserInfo user) throws Exception {
+		System.out.println("Redis Key : "+user.getRedisKey());
+		jedis.set(user.getRedisKey(), token_value);
+		System.out.println("Value from redis : "+jedis.get(user.getRedisKey()));
+		jedis.close();
 	}
 
-	public boolean logoutUser(String userId) {
-		String checkUser = jedis.get(userId);
-		System.out.println("checkUser : "+checkUser);
+	public boolean removeFromCache(String redisKey, boolean foundInDiffRegion) {
+
+		Jedis jedisx;
+		if(!foundInDiffRegion) {
+			jedisx = jedis;
+		}else {
+			jedisx = jedis_sec;
+		}
+		String checkUser = jedisx.get(redisKey);
+		System.out.println("User check : "+checkUser);
 		if("valid".equals(checkUser)) {
-			Long del = jedis.del(userId);
+			Long del = jedisx.del(redisKey);
 			System.out.println("Key deleted from Redis : "+del);
 			return true;
 		}else {
+			System.out.println("User not found in cache.");
 			return false;
 		}
-
 	}
 }

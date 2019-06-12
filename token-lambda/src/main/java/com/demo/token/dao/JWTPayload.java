@@ -4,15 +4,21 @@ import java.util.Date;
 import java.util.List;
 
 public class JWTPayload{
-    private String issuer;
-    private String subject;
-    private List<String> audience;
-    private Date expirationTime;
-    private Date issueTime;
-    private String accountNumber;
-    private String jwtID;
-    private String role;
-    private String userName;
+	private String issuer;
+	private String subject;
+	private List<String> audience;
+	private Date expirationTime;
+	private Date issueTime;
+	private String accountNumber;
+	private String jwtID;
+	private String role;
+	private String userName;
+	private boolean valid;
+	private String redisKey;
+	private String regionCreated;
+	private String regionLatest;
+	private boolean foundInDiffRegion;
+
 	public String getIssuer() {
 		return issuer;
 	}
@@ -67,8 +73,35 @@ public class JWTPayload{
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	
-    
-    
-    
+	public boolean isValid() {
+		return valid;
+	}
+	public void setValid(boolean valid) {
+		this.valid = valid;
+	}
+	public String getRedisKey() {
+		return redisKey;
+	}
+	public void setRedisKey(String redisKey) {
+		this.redisKey = redisKey;
+	}
+	public String getRegionCreated() {
+		return regionCreated;
+	}
+	public void setRegionCreated(String regionCreated) {
+		this.regionCreated = regionCreated;
+	}
+	public String getRegionLatest() {
+		return regionLatest;
+	}
+	public void setRegionLatest(String regionLatest) {
+		this.regionLatest = regionLatest;
+	}
+	public boolean isFoundInDiffRegion() {
+		return foundInDiffRegion;
+	}
+	public void setFoundInDiffRegion(boolean foundInDiffRegion) {
+		this.foundInDiffRegion = foundInDiffRegion;
+	}
+
 }
