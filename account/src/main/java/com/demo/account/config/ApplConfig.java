@@ -1,9 +1,12 @@
 package com.demo.account.config;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -13,6 +16,8 @@ import org.springframework.data.redis.connection.jedis.JedisClientConfiguration.
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.client.RestTemplate;
+
+import com.demo.token.filter.AuthorizeFilter;
 
 @Configuration
 public class ApplConfig {
@@ -33,11 +38,20 @@ public class ApplConfig {
 	@Value("${REDIS_TIMEOUT:3000}")
 	private int redis_timeout;
 
+	@Value("${jedis.timeout.interval}")	
+	private long timeout_interval;
+
+	@Value("${tokenExpiryInterval}")
+	private long tokenExpiryInterval;
+
 	@Value("${policy.account.summary}")
 	private List<String> summary_Policy;
 
-	@Value("${jedis.timeout.interval}")	
-	private long timeout_interval;
+	@Value("${policy.account.current_balance}")
+	private List<String> current_balance_Policy;
+
+	@Value("${policy.account.due}")
+	private List<String> due_Policy;
 
 	@Bean
 	public RestTemplate restTemplate() {
@@ -85,13 +99,23 @@ public class ApplConfig {
 		return jedisConFactory;
 	}
 
-	/*
-	 * @Bean public Jedis jedis() {
-	 * log.info("Redis HOST:PORT : "+redis_host+":"+redis_port); Jedis jedis = new
-	 * Jedis(redis_host, redis_port, redis_timeout);
-	 * 
-	 * log.info(jedis.set("abc", "This is dummy.")); log.info(jedis.get("abc"));
-	 * 
-	 * log.info("summary_Policy : "+summary_Policy); return jedis; }
-	 */
+	@Bean
+	public FilterRegistrationBean<AuthorizeFilter> registerTokenValidationFilter(AuthorizeFilter authorizeFilter)
+	{
+		FilterRegistrationBean<AuthorizeFilter> registrationBean = new FilterRegistrationBean<>();
+		authorizeFilter.setTokenExpiryInterval(tokenExpiryInterval);
+		authorizeFilter.setMap(getPolicy());
+		registrationBean.setFilter(authorizeFilter);
+		registrationBean.setOrder(1);
+		return registrationBean;
+	}
+
+
+	public Map<String,List<String>> getPolicy(){
+		Map<String,List<String>> policyMap = new HashMap<>();
+		policyMap.put("account_summary", summary_Policy);
+		policyMap.put("account_current_balance", current_balance_Policy);
+		policyMap.put("account_due", due_Policy);
+		return policyMap;
+	}
 }

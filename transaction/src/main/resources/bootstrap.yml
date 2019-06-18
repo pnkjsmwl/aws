@@ -4,5 +4,5 @@ spring:
       uri: ${CLOUD_CONFIG_URI:http://localhost:8080}
   application:
     name: TransactionMS 
-account_crud:
+transaction_crud:
   url: ${TRANSACTION_CRUD_URL:http://localhost:8096}
