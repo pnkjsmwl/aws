@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: transaction
+  namespace: domain
 spec:
   replicas: 1
   template:
@@ -11,8 +12,8 @@ spec:
     spec:
       containers:
       - name: transaction
-        image: pnkjsmwl/transaction:1.0
-        imagePullPolicy: Always
+        image: pnkjsmwl/transaction:2.0
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9096
         env:
@@ -25,7 +26,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: redis-configmap
-              key: REDIS_HOST_SEC
+              key: REDIS_HOST_SEC      
         - name: REDIS_PORT
           valueFrom:
             configMapKeyRef:
@@ -37,6 +38,14 @@ spec:
               name: redis-configmap
               key: REDIS_TIMEOUT
         - name: CLOUD_CONFIG_URI
-          value: "http://configserver:8080"
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: CLOUD_CONFIG_URI
+        - name: TRANSACTION_CRUD_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: TRANSACTION_CRUD_URL
       imagePullSecrets:
       - name: my-sec

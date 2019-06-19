@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: configserver
+  namespace: domain
 spec:
   replicas: 1
   template:
@@ -12,7 +13,7 @@ spec:
       containers:
       - name: configserver
         image: pnkjsmwl/configserver:1.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
       imagePullSecrets:
