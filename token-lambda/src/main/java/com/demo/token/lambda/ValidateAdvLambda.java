@@ -11,16 +11,16 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
-import com.demo.token.dao.TokenAuthRequest;
+import com.demo.token.dao.APIGatewayProxyRequest;
 
-public class Validate2Lambda implements RequestHandler<TokenAuthRequest, Map<String, Object>> {
+public class ValidateAdvLambda implements RequestHandler<APIGatewayProxyRequest, Map<String, Object>> {
 
-	private String newJWTToken, region;
+	private String newJWTToken, region, accountNumber;
 	@Override
-	public Map<String, Object> handleRequest(TokenAuthRequest input, Context context) {
+	public Map<String, Object> handleRequest(APIGatewayProxyRequest input, Context context) {
 		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
 		LambdaLogger logger = context.getLogger();
-
+		Map<String, String> validateResponseMap = new HashMap<String, String>();
 		/* arn format -> arn:aws:<resource>:<region>:<unique id>:function:<name of lambda invoked>  
 		 * eg. arn:aws:lambda:us-east-2:161770494564:function:signon
 		 * eg. arn:aws:dynamodb:us-east-2:161770494564:table/user_info
@@ -29,9 +29,6 @@ public class Validate2Lambda implements RequestHandler<TokenAuthRequest, Map<Str
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 
 		String principalId = "xxxx";
-
-		System.out.println("AccountId : "+input.getHeaders().get("AccountId"));
-
 		String methodArn = input.getMethodArn();
 
 		String invokedFunctionArn = context.getInvokedFunctionArn();
@@ -39,13 +36,16 @@ public class Validate2Lambda implements RequestHandler<TokenAuthRequest, Map<Str
 		region = invokedFunctionArn.split(":")[3];
 
 		logger.log("invokedFunctionArn : "+invokedFunctionArn +", invokedLambda : "+invokedLambda);
-		logger.log("Authorization token : "+input.getAuthorizationToken());
+		logger.log("Authorization token : "+input.getHeaders().get("Authorization"));
+		logger.log("AccountId : "+input.getHeaders().get("AccountId"));
 
-		//cred.setArn(invokedFunctionArn);
 		try {
 			if(authenticatorService!=null) {
-				String jwtToken = input.getAuthorizationToken();
-				newJWTToken  = authenticatorService.validate2(jwtToken, invokedFunctionArn);
+				String jwtToken = input.getHeaders().get("Authorization");
+				validateResponseMap  = authenticatorService.validateAdv(jwtToken, invokedFunctionArn, input);
+
+				newJWTToken = validateResponseMap.get("token");
+				accountNumber = validateResponseMap.get("accountNumber");
 
 				System.out.println("Old token : "+jwtToken);
 				System.out.println("New Token : "+newJWTToken);
@@ -81,13 +81,12 @@ public class Validate2Lambda implements RequestHandler<TokenAuthRequest, Map<Str
 
 		if ("Allow".equals(effect)) {
 			Map<String, Object> context = new HashMap<>();
-			context.put("token", newJWTToken);
 			context.put("region", region);
+			context.put("token", newJWTToken);
+			context.put("accountNumber", accountNumber);
 			authResponse.put("context", context);
 		}
 		return authResponse;
 	}
-
-
 
 }

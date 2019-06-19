@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.codec.binary.Base64;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -27,8 +25,6 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 
-import redis.clients.jedis.Jedis;
-
 @Component
 public class JWEGenerator {
 
@@ -38,16 +34,18 @@ public class JWEGenerator {
 	@Value("${tokenExpiryInterval}")
 	private long tokenExpiryInterval;
 
-	@Value("${token_value}")
-	private String token_value;
+	public String generateJWE(Map<String, String> data, UserInfo userInfo) throws Exception {
+		JWTClaimsSet jwtClaimSet = buildClaimSet(data, userInfo);
+		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128CBC_HS256);
+		// Create the encrypted JWT object
+		EncryptedJWT jwt = new EncryptedJWT(header, jwtClaimSet);
+		RSAEncrypter encrypter = null;
+		RSAPublicKey publicKey = getPublicKey("public.pem");
+		encrypter = new RSAEncrypter(publicKey);
+		jwt.encrypt(encrypter);
+		return jwt.serialize();
+	}
 
-	@Autowired
-	@Qualifier("jedis")
-	private Jedis jedis;
-
-	@Autowired
-	@Qualifier("jedis_sec")
-	private Jedis jedis_sec;
 
 	public JWTClaimsSet buildClaimSet(Map<String, String> data, UserInfo userInfo) {
 		// Session id yet to add
@@ -104,42 +102,5 @@ public class JWEGenerator {
 		return getPublicKeyFromString(publicKeyPEM);
 	}
 
-	public String generateJWE(Map<String, String> data, UserInfo userInfo) throws Exception {
-		JWTClaimsSet jwtClaimSet = buildClaimSet(data, userInfo);
-		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128CBC_HS256);
-		// Create the encrypted JWT object
-		EncryptedJWT jwt = new EncryptedJWT(header, jwtClaimSet);
-		RSAEncrypter encrypter = null;
-		RSAPublicKey publicKey = getPublicKey("public.pem");
-		encrypter = new RSAEncrypter(publicKey);
-		jwt.encrypt(encrypter);
-		return jwt.serialize();
-	}
 
-	public void addToCache(UserInfo user) throws Exception {
-		System.out.println("Redis Key : "+user.getRedisKey());
-		jedis.set(user.getRedisKey(), token_value);
-		System.out.println("Value from redis : "+jedis.get(user.getRedisKey()));
-		jedis.close();
-	}
-
-	public boolean removeFromCache(String redisKey, boolean foundInDiffRegion) {
-
-		Jedis jedisx;
-		if(!foundInDiffRegion) {
-			jedisx = jedis;
-		}else {
-			jedisx = jedis_sec;
-		}
-		String checkUser = jedisx.get(redisKey);
-		System.out.println("User check : "+checkUser);
-		if("valid".equals(checkUser)) {
-			Long del = jedisx.del(redisKey);
-			System.out.println("Key deleted from Redis : "+del);
-			return true;
-		}else {
-			System.out.println("User not found in cache.");
-			return false;
-		}
-	}
 }
