@@ -13,6 +13,7 @@ policy:
    recent: CUSTOMER_ROLE
    last: CUSTOMER_ROLE
   profile:
+   summary: CUSTOMER_ROLE 
    email: CUSTOMER_ROLE
    mobile: CUSTOMER_ROLE
    address: CUSTOMER_ROLE

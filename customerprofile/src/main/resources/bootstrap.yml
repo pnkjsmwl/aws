@@ -1,0 +1,9 @@
+spring:
+  cloud:
+    config: 
+      uri: ${CLOUD_CONFIG_URI:http://localhost:8080}
+  application:
+    name: CustomerMS    
+customer_crud:
+  url: ${CUSTOMER_CRUD_URL:http://localhost:8095}
+  

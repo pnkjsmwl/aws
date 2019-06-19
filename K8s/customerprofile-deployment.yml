@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: customerprofile
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: customerprofile
+    spec:
+      containers:
+      - name: customerprofile
+        image: pnkjsmwl/customerprofile:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9097
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_HOST
+        - name: REDIS_HOST_SEC
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_HOST_SEC
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_PORT
+        - name: REDIS_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_TIMEOUT
+        - name: CLOUD_CONFIG_URI
+          value: "http://configserver:8080"  
+      imagePullSecrets:
+      - name: my-sec

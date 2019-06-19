@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-configmap
+data:
+  REDIS_HOST: "myredis.grfk6k.0001.use1.cache.amazonaws.com"
+  REDIS_HOST_SEC: "myredis.yhjlx0.0001.use2.cache.amazonaws.com"
+  REDIS_PORT: "6379" 
+  REDIS_TIMEOUT: "3000"
