@@ -32,17 +32,22 @@ public class RedisUtils {
 	@Qualifier("redisTemplate")
 	private RedisTemplate<String, String> stringRedisTemplate;
 
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, Account> objectRedisTemplateSec;
-
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, Map<?,?>> mapRedisTemplateSec;
-
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, String> stringRedisTemplateSec;
+	/*
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, Account>
+	 * objectRedisTemplateSec;
+	 * 
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, Map<?,?>>
+	 * mapRedisTemplateSec;
+	 * 
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, String>
+	 * stringRedisTemplateSec;
+	 */
 
 
 
@@ -64,30 +69,30 @@ public class RedisUtils {
 	public Object getAccountValue( final String key ) {
 		log.info("Getting from primary cache.");
 		Account account = objectRedisTemplate.opsForValue().get( key );
-		if(account==null) {
-			log.info("Getting from secondary cache.");
-			account = objectRedisTemplateSec.opsForValue().get( key );
-		}
+		/*
+		 * if(account==null) { log.info("Getting from secondary cache."); account =
+		 * objectRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return account;
 	}
 
 	public Object getMapValue( final String key ) {
 		log.info("Getting from primary cache.");
 		Map<?, ?> map = mapRedisTemplate.opsForValue().get( key );
-		if(map.isEmpty()) {
-			log.info("Getting from secondary cache.");
-			return mapRedisTemplateSec.opsForValue().get( key );
-		}
+		/*
+		 * if(map.isEmpty()) { log.info("Getting from secondary cache."); return
+		 * mapRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return map;
 	}
 
 	public Object getStringValue( final String key ) {
 		log.info("Getting from primary cache.");
 		String string = stringRedisTemplate.opsForValue().get( key );
-		if(string==null) {
-			log.info("Getting from secondary cache.");
-			return stringRedisTemplate.opsForValue().get( key );
-		}
+		/*
+		 * if(string==null) { log.info("Getting from secondary cache."); return
+		 * stringRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return string;
 	}
 

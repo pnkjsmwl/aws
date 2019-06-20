@@ -26,14 +26,14 @@ public class ApplConfig {
 	@Value("${REDIS_HOST:localhost}")
 	private String redis_host;
 
-	@Value("${REDIS_PORT:6380}")
+	@Value("${REDIS_PORT:6379}")
 	private int redis_port;
 
-	@Value("${REDIS_HOST_SEC:localhost}")
-	private String redis_host_sec;
-
-	@Value("${REDIS_PORT:6379}")
-	private int redis_port_sec;
+	/*
+	 * @Value("${REDIS_HOST_SEC:localhost}") private String redis_host_sec;
+	 * 
+	 * @Value("${REDIS_PORT:6380}") private int redis_port_sec;
+	 */
 
 	@Value("${REDIS_TIMEOUT:3000}")
 	private int redis_timeout;
@@ -70,13 +70,13 @@ public class ApplConfig {
 		return redisTemplate;
 	}
 
-	@Bean(name="redisTemplateSec")
-	public <T> RedisTemplate<String, T> redisTemplateSecondary() {
-		RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
-		redisTemplate.setConnectionFactory(jedisConnectionFactoryPrimarySecondary());
-		redisTemplate.setEnableTransactionSupport(true); 
-		return redisTemplate; 
-	}
+	/*
+	 * @Bean(name="redisTemplateSec") public <T> RedisTemplate<String, T>
+	 * redisTemplateSecondary() { RedisTemplate<String, T> redisTemplate = new
+	 * RedisTemplate<>();
+	 * redisTemplate.setConnectionFactory(jedisConnectionFactoryPrimarySecondary());
+	 * redisTemplate.setEnableTransactionSupport(true); return redisTemplate; }
+	 */
 
 	public JedisConnectionFactory jedisConnectionFactoryPrimary() {
 		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
@@ -90,17 +90,22 @@ public class ApplConfig {
 		return jedisConFactory;
 	}
 
-	public JedisConnectionFactory jedisConnectionFactoryPrimarySecondary() {
-		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-		redisStandaloneConfiguration.setHostName(redis_host_sec);
-		redisStandaloneConfiguration.setPort(redis_port_sec);
-
-		JedisClientConfigurationBuilder jedisClientConfiguration = JedisClientConfiguration.builder();
-		jedisClientConfiguration.connectTimeout(Duration.ofSeconds(timeout_interval));// connection timeout in seconds
-
-		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration.build());
-		return jedisConFactory;
-	}
+	/*
+	 * public JedisConnectionFactory jedisConnectionFactoryPrimarySecondary() {
+	 * RedisStandaloneConfiguration redisStandaloneConfiguration = new
+	 * RedisStandaloneConfiguration();
+	 * redisStandaloneConfiguration.setHostName(redis_host_sec);
+	 * redisStandaloneConfiguration.setPort(redis_port_sec);
+	 * 
+	 * JedisClientConfigurationBuilder jedisClientConfiguration =
+	 * JedisClientConfiguration.builder();
+	 * jedisClientConfiguration.connectTimeout(Duration.ofSeconds(timeout_interval))
+	 * ;// connection timeout in seconds
+	 * 
+	 * JedisConnectionFactory jedisConFactory = new
+	 * JedisConnectionFactory(redisStandaloneConfiguration,
+	 * jedisClientConfiguration.build()); return jedisConFactory; }
+	 */
 
 	@Bean
 	public FilterRegistrationBean<AuthorizeFilter> registerTokenValidationFilter(AuthorizeFilter authorizeFilter)
