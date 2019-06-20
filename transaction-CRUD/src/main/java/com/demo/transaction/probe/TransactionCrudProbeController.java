@@ -1,4 +1,4 @@
-package com.demo.account.probe;
+package com.demo.transaction.probe;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,18 +8,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class AccountCrudProbeController {
+public class TransactionCrudProbeController {
 
 	@GetMapping("/live")
 	public ResponseEntity<?> liveCheck(){
 		Map<String,String> map = new HashMap<>();
-		map.put("Message", "Account Crud App is live.");
+		map.put("Message", "Transaction Crud App is live.");
 		return ResponseEntity.status(200).body(map);
 	}
-	
+
 	@GetMapping("/ready")
 	public ResponseEntity<?> readyCheck(){
-		
+
 		/*
 		 * Here we need to implement some kind of logic which determines whether app is ready to server traffic, logic could include
 		 * 
@@ -28,9 +28,9 @@ public class AccountCrudProbeController {
 		 * 
 		 * */
 		Map<String,String> map = new HashMap<>();
-		map.put("Message", "Account Crud App is ready.");
-		
+		map.put("Message", "Transaction Crud App is ready.");
+
 		return ResponseEntity.status(200).body(map);
 	}
-	
+
 }

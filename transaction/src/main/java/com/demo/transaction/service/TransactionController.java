@@ -2,6 +2,7 @@ package com.demo.transaction.service;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -42,45 +44,51 @@ public class TransactionController {
 	@Autowired
 	private RedisUtils redisUtils;
 
+	@SuppressWarnings("unchecked")
 	@GetMapping("/summary")
-	public ResponseEntity<?> getTrasnactionSummary(@RequestParam String accountNumber, HttpServletRequest request) {
+	public ResponseEntity<?> getTransactionSummary(@RequestParam String accountNumber, HttpServletRequest request) {
+		log.info("Input account number : "+accountNumber);
+		try {
+			if(accountNumber!=null) {
 
-		if(accountNumber!=null) {
+				String key = accountNumber+":"+request.getRequestURI();
 
-			String key = accountNumber+":"+request.getRequestURI();
+				List<Transaction> transactionFromRedis = (List<Transaction>) redisUtils.getListValue(key);
+				if(transactionFromRedis!=null && !transactionFromRedis.isEmpty())
+				{
+					log.info("Response received from Cache");
+					return ResponseEntity.ok(transactionFromRedis);
+				}
 
-			Transaction transactionFromRedis = (Transaction) redisUtils.getTransactionValue(key);
-			if(transactionFromRedis!=null)
-			{
-				log.info("AccountNumber from Redis : "+transactionFromRedis.getAccountNumber());
-				return ResponseEntity.ok(transactionFromRedis);
+				HttpHeaders requestHeaders = new HttpHeaders();
+				requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
+
+				MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
+				params.add("accountNumber", accountNumber);
+
+				HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
+
+				String url = transactionCrudUrl+"/transaction-crud/summary";
+				log.info(url);
+				URI uri = UriComponentsBuilder.fromUriString(url)
+						.queryParams(params)
+						.build()
+						.toUri();
+
+				ResponseEntity<List<Transaction>> respEntity = transactionRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, new ParameterizedTypeReference<List<Transaction>>() {});
+
+				if(respEntity.getStatusCode()==HttpStatus.OK) {
+					log.info("Response received from Crud");
+
+					List<Transaction> transactions = respEntity.getBody();
+
+					redisUtils.setValue(key, transactions);
+
+					return ResponseEntity.ok(transactions);
+				}
 			}
-
-			HttpHeaders requestHeaders = new HttpHeaders();
-			requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-			MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-			params.add("accountNumber", accountNumber);
-
-			HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
-
-			String url = transactionCrudUrl+"/transaction-crud/summary";
-			log.info(url);
-			URI uri = UriComponentsBuilder.fromUriString(url)
-					.queryParams(params)
-					.build()
-					.toUri();
-
-			ResponseEntity<Transaction> respEntity = transactionRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, Transaction.class);
-
-			if(respEntity.getStatusCode()==HttpStatus.OK) {
-
-				Transaction transaction = respEntity.getBody();
-
-				redisUtils.setValue(key, transaction);
-
-				return ResponseEntity.ok(transaction);
-			}
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -88,7 +96,7 @@ public class TransactionController {
 	@SuppressWarnings("rawtypes")
 	@GetMapping("/recent")
 	public ResponseEntity<?> getRecentNTransactions(@RequestParam String accountNumber, @RequestParam String count, HttpServletRequest request) {
-
+		log.info("Input account number : "+accountNumber);
 		if(accountNumber!=null) {
 
 			String key = accountNumber+":"+request.getRequestURI()+":"+count;
@@ -132,7 +140,7 @@ public class TransactionController {
 	@SuppressWarnings("rawtypes")
 	@GetMapping("/last")
 	public ResponseEntity<?> getLastTransaction(@RequestParam String accountNumber, HttpServletRequest request) {
-
+		log.info("Input account number : "+accountNumber);
 		if(accountNumber!=null) {
 
 			String key = accountNumber+":"+request.getRequestURI();

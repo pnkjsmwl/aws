@@ -3,6 +3,8 @@ package com.demo.account.service;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import com.demo.account.doc.Account;
 @RestController
 @RequestMapping("/account-crud")
 public class AccountCrudController {
+	private Log log = LogFactory.getLog(AccountCrudController.class);
 
 	@Autowired
 	@Qualifier("accountData")
@@ -25,6 +28,7 @@ public class AccountCrudController {
 	public ResponseEntity<?> getAccountSummary(@RequestParam String accountNumber) {
 		if(accountNumber!=null) {
 			Account account = accountData.get(accountNumber);
+			log.info("Response : "+account);
 			return ResponseEntity.ok(account);
 		}
 		return null;
@@ -35,6 +39,7 @@ public class AccountCrudController {
 		Map<String,String> map = new HashMap<String,String>();
 		if(accountNumber!=null) {
 			map.put("current-balance", accountData.get(accountNumber).getCurrentBalance());
+			log.info("Response : "+map);
 			return ResponseEntity.ok(map);
 		}
 		return null;
@@ -46,6 +51,7 @@ public class AccountCrudController {
 		if(accountNumber!=null) {
 			map.put("due_amount", accountData.get(accountNumber).getDueAmount());
 			map.put("due_date", accountData.get(accountNumber).getDueDate());
+			log.info("Response : "+map);
 			return ResponseEntity.ok().body(map);
 		}
 		return null;

@@ -1,4 +1,4 @@
-package com.demo.account.probe;
+package com.demo.transaction.probe;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -21,14 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.demo.account.doc.Account;
+import com.demo.transaction.doc.Transaction;
 
 @RestController
-public class AccountProbeController {
-	private Log log = LogFactory.getLog(AccountProbeController.class);
+public class TransactionProbeController {
+	private Log log = LogFactory.getLog(TransactionProbeController.class);
 
-	@Value("${account_crud.url}")
-	private String accountCrudUrl;
+	@Value("${transaction_crud.url}")
+	private String transactionCrudUrl;
 
 	@Autowired
 	private RestTemplate accountRestTemplate;
@@ -36,7 +36,7 @@ public class AccountProbeController {
 	@GetMapping("/live")
 	public ResponseEntity<?> liveCheck(){
 		Map<String,String> map = new HashMap<>();
-		map.put("Message", "Account App is live.");
+		map.put("Message", "Transaction App is live.");
 		return ResponseEntity.status(200).body(map);
 	}
 
@@ -58,21 +58,21 @@ public class AccountProbeController {
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
 		params.add("accountNumber", "1234567812345678");
 
-		String url = accountCrudUrl+"/account-crud/summary";
+		String url = transactionCrudUrl+"/transaction-crud/last";
 		log.info(url);
 		URI uri = UriComponentsBuilder.fromUriString(url)
 				.queryParams(params)
 				.build()
 				.toUri();
 
-		ResponseEntity<Account> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, Account.class);
+		ResponseEntity<Transaction> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, Transaction.class);
 		Map<String,String> map = new HashMap<>();
 
 		if(respEntity.getStatusCode()==HttpStatus.OK) {
-			map.put("Message", "Account App is ready.");
+			map.put("Message", "Transaction App is ready.");
 			return ResponseEntity.status(200).body(map);
 		}
-		map.put("Message", "Account App is unavailable.");
+		map.put("Message", "Transaction App is unavailable.");
 		return ResponseEntity.status(503).body(map);
 	}
 

@@ -1,4 +1,4 @@
-package com.demo.account.probe;
+package com.demo.customerprofile.probe;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -21,14 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.demo.account.doc.Account;
-
 @RestController
-public class AccountProbeController {
-	private Log log = LogFactory.getLog(AccountProbeController.class);
+public class ProfileProbeController {
+	private Log log = LogFactory.getLog(ProfileProbeController.class);
 
-	@Value("${account_crud.url}")
-	private String accountCrudUrl;
+	@Value("${customer_crud.url}")
+	private String customerCrudUrl;
 
 	@Autowired
 	private RestTemplate accountRestTemplate;
@@ -36,10 +34,11 @@ public class AccountProbeController {
 	@GetMapping("/live")
 	public ResponseEntity<?> liveCheck(){
 		Map<String,String> map = new HashMap<>();
-		map.put("Message", "Account App is live.");
+		map.put("Message", "Profile App is live.");
 		return ResponseEntity.status(200).body(map);
 	}
 
+	@SuppressWarnings("rawtypes")
 	@GetMapping("/ready")
 	public ResponseEntity<?> readyCheck(){
 
@@ -56,23 +55,22 @@ public class AccountProbeController {
 		HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
 
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.add("accountNumber", "1234567812345678");
+		params.add("userName", "Pankaj");
 
-		String url = accountCrudUrl+"/account-crud/summary";
+		String url = customerCrudUrl+"/customer-crud/summary";
 		log.info(url);
 		URI uri = UriComponentsBuilder.fromUriString(url)
 				.queryParams(params)
 				.build()
 				.toUri();
 
-		ResponseEntity<Account> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, Account.class);
+		ResponseEntity<HashMap> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, HashMap.class);
 		Map<String,String> map = new HashMap<>();
-
 		if(respEntity.getStatusCode()==HttpStatus.OK) {
-			map.put("Message", "Account App is ready.");
+			map.put("Message", "Profile App is ready.");
 			return ResponseEntity.status(200).body(map);
 		}
-		map.put("Message", "Account App is unavailable.");
+		map.put("Message", "Profile App is unavailable.");
 		return ResponseEntity.status(503).body(map);
 	}
 

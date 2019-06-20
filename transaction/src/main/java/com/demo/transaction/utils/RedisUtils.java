@@ -1,5 +1,6 @@
 package com.demo.transaction.utils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -30,24 +31,42 @@ public class RedisUtils {
 
 	@Autowired
 	@Qualifier("redisTemplate")
+	private RedisTemplate<String, List<?>> listRedisTemplate;
+
+	@Autowired
+	@Qualifier("redisTemplate")
 	private RedisTemplate<String, String> stringRedisTemplate;
 
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, Transaction> objectRedisTemplateSec;
-
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, Map<?,?>> mapRedisTemplateSec;
-
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, String> stringRedisTemplateSec;
+	/*
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, Transaction>
+	 * objectRedisTemplateSec;
+	 * 
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, Map<?,?>>
+	 * mapRedisTemplateSec;
+	 * 
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, List<?>>
+	 * listRedisTemplateSec;
+	 * 
+	 * @Autowired
+	 * 
+	 * @Qualifier("redisTemplateSec") private RedisTemplate<String, String>
+	 * stringRedisTemplateSec;
+	 */
 
 	public <T> void setValue( final String key, final T value ) {
 		if(value instanceof Transaction) {
 			objectRedisTemplate.opsForValue().set( key, (Transaction) value);
 			objectRedisTemplate.expire(key, timeout_interval, TimeUnit.SECONDS);
+		}
+		else if(value instanceof List) {
+			listRedisTemplate.opsForValue().set( key, (List<?>) value);
+			listRedisTemplate.expire(key, timeout_interval, TimeUnit.SECONDS);
 		}
 		else if(value instanceof Map) {
 			mapRedisTemplate.opsForValue().set( key, (Map<?, ?>) value);
@@ -62,30 +81,40 @@ public class RedisUtils {
 	public Object getTransactionValue( final String key ) {
 		log.info("Getting from primary cache.");
 		Transaction transaction = objectRedisTemplate.opsForValue().get( key );
-		if(transaction==null) {
-			log.info("Getting from secondary cache.");
-			transaction = objectRedisTemplateSec.opsForValue().get( key );
-		}
+		/*
+		 * if(transaction==null) { log.info("Getting from secondary cache.");
+		 * transaction = objectRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return transaction;
 	}
 
 	public Object getMapValue( final String key ) {
 		log.info("Getting from primary cache.");
 		Map<?, ?> map = mapRedisTemplate.opsForValue().get( key );
-		if(map.isEmpty()) {
-			log.info("Getting from secondary cache.");
-			return mapRedisTemplateSec.opsForValue().get( key );
-		}
+		/*
+		 * if(map==null || map.isEmpty()) { log.info("Getting from secondary cache.");
+		 * return mapRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return map;
+	}
+
+	public Object getListValue( final String key ) {
+		log.info("Getting from primary cache.");
+		List<?> list = listRedisTemplate.opsForValue().get( key );
+		/*
+		 * if(list==null || list.isEmpty()) { log.info("Getting from secondary cache.");
+		 * return listRedisTemplateSec.opsForValue().get( key ); }
+		 */
+		return list;
 	}
 
 	public Object getStringValue( final String key ) {
 		log.info("Getting from primary cache.");
 		String string = stringRedisTemplate.opsForValue().get( key );
-		if(string==null) {
-			log.info("Getting from secondary cache.");
-			return stringRedisTemplateSec.opsForValue().get( key );
-		}
+		/*
+		 * if(string==null) { log.info("Getting from secondary cache."); return
+		 * stringRedisTemplateSec.opsForValue().get( key ); }
+		 */
 		return string;
 	}
 

@@ -52,11 +52,8 @@ public class AccountController {
 			Account accountFromRedis = (Account) redisUtils.getAccountValue(key);
 			if(accountFromRedis!=null)
 			{
+				log.info("Response received from Cache");
 				log.info("AccountNumber from Redis : "+accountFromRedis.getAccountNumber());
-				/*
-				 * HttpHeaders headers= new HttpHeaders();
-				 * headers.add(HttpHeaders.AUTHORIZATION, encryptedJWT );
-				 */
 
 				return ResponseEntity.ok().body(accountFromRedis);
 			}
@@ -78,20 +75,11 @@ public class AccountController {
 
 			ResponseEntity<Account> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, Account.class);
 			if(respEntity.getStatusCode()==HttpStatus.OK) {
-
+				log.info("Response received from Crud");
 				Account account = respEntity.getBody();
 
 				redisUtils.setValue(key, account);
-
-				/*
-				 * HttpHeaders headers= new HttpHeaders();
-				 * headers.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
-				 */
-
-				/*
-				 * HttpHeaders headers = new HttpHeaders();
-				 * headers.add(HttpHeaders.AUTHORIZATION, "dummy value");
-				 */return ResponseEntity.ok().body(account);
+				return ResponseEntity.ok().body(account);
 			}
 		}
 		return null;

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +21,8 @@ import com.demo.transaction.doc.Transaction;
 @RestController
 @RequestMapping("/transaction-crud")
 public class TransactionCrudController {
+	private Log log = LogFactory.getLog(TransactionCrudController.class);
 
-	
 	@Autowired
 	@Qualifier("transactionData")
 	private Map<String, Deque<Transaction>> transactionData;
@@ -30,6 +32,7 @@ public class TransactionCrudController {
 
 		if(accountNumber!=null) {
 			Deque<Transaction> value = transactionData.get(accountNumber);
+			log.info("Response : "+value);
 			return ResponseEntity.ok(value);
 		}
 		return null;
@@ -40,6 +43,7 @@ public class TransactionCrudController {
 		Map<String, List<Transaction>> map = new HashMap<>();
 		if(accountNumber!=null) {
 			Deque<Transaction> queue = transactionData.get(accountNumber);
+			log.info("Response : "+queue);
 			map.put("recent-"+count+"-transactions", queue.stream().limit(Integer.parseInt(count)).collect(Collectors.toList()));
 			return ResponseEntity.ok(map);
 		}
@@ -51,6 +55,7 @@ public class TransactionCrudController {
 		Map<String, Transaction> map = new HashMap<>();
 		if(accountNumber!=null) {
 			Deque<Transaction> queue = transactionData.get(accountNumber);
+			log.info("Response : "+queue);
 			map.put("last-transaction", queue.getFirst());
 			return ResponseEntity.ok(map);
 		}
