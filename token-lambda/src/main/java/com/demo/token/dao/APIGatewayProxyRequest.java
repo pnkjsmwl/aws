@@ -16,6 +16,8 @@ public class APIGatewayProxyRequest {
     private Context context;
     private String body;
     private Boolean isBase64Encoded;
+    private String methodArn;
+    private Map<String, String> requestContext;
 
     public APIGatewayProxyRequest() {}
 
@@ -106,6 +108,14 @@ public class APIGatewayProxyRequest {
 
 	public void setIsBase64Encoded(Boolean isBase64Encoded) {
 		this.isBase64Encoded = isBase64Encoded;
+	}
+
+	public String getMethodArn() {
+		return methodArn;
+	}
+
+	public void setMethodArn(String methodArn) {
+		this.methodArn = methodArn;
 	}
 
     

@@ -3,6 +3,7 @@
  kind: Service
  metadata:
    name: customerprofile-crud
+   namespace: crud
  spec:
    ports:
      - port: 80

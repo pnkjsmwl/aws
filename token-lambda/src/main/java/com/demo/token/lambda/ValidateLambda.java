@@ -45,7 +45,7 @@ public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPoli
 		try {
 			if(authenticatorService!=null) {
 				String jwtToken = input.getAuthorizationToken();
-				if(authenticatorService.validate(jwtToken, invokedFunctionArn)!=null) {
+				if(authenticatorService.validate2(jwtToken, invokedFunctionArn)!=null) {
 					closeAppContext(appContext);
 					return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getAllowAllPolicy(region, awsAccountId, restApiId, stage));
 				}

@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: customerprofile-crud
+  namespace: crud
 spec:
   replicas: 1
   template:
@@ -11,8 +12,8 @@ spec:
     spec:
       containers:
       - name: customerprofile-crud
-        image: pnkjsmwl/customerprofile-crud:1.0
-        imagePullPolicy: Always
+        image: pnkjsmwl/customerprofile-crud:2.0
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8097  
       imagePullSecrets:

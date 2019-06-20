@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: account
+  namespace: domain
 spec:
   replicas: 1
   template:
@@ -11,8 +12,8 @@ spec:
     spec:
       containers:
       - name: account
-        image: pnkjsmwl/account:1.0
-        imagePullPolicy: Always
+        image: pnkjsmwl/account:2.0
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9095
         env:
@@ -37,8 +38,14 @@ spec:
               name: redis-configmap
               key: REDIS_TIMEOUT
         - name: CLOUD_CONFIG_URI
-          value: "http://configserver"
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: CLOUD_CONFIG_URI
         - name: ACCOUNT_CRUD_URL
-          value: "http://account-crud"
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: ACCOUNT_CRUD_URL
       imagePullSecrets:
       - name: my-sec

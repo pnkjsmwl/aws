@@ -1,5 +1,6 @@
 package com.demo.token.config;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisClientConfiguration.JedisClientConfigurationBuilder;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -55,6 +61,47 @@ public class ApplConfig {
 		PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer =  new PropertySourcesPlaceholderConfigurer();
 		propertySourcesPlaceholderConfigurer.setIgnoreResourceNotFound(true);
 		return propertySourcesPlaceholderConfigurer;
+	}
+
+	@Bean(name="redisTemplate")
+	@Primary
+	public <T> RedisTemplate<String, T> redisTemplate() {
+		RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(jedisConnectionFactoryPrimary());
+		redisTemplate.setEnableTransactionSupport(true);
+		return redisTemplate;
+	}
+
+	@Bean(name="redisTemplateSec")
+	public <T> RedisTemplate<String, T> redisTemplateSecondary() {
+		RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(jedisConnectionFactoryPrimarySecondary());
+		redisTemplate.setEnableTransactionSupport(true); 
+		return redisTemplate; 
+	}
+
+	public JedisConnectionFactory jedisConnectionFactoryPrimary() {
+		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+		redisStandaloneConfiguration.setHostName(redis_host);
+		redisStandaloneConfiguration.setPort(redis_port);
+
+		JedisClientConfigurationBuilder jedisClientConfiguration = JedisClientConfiguration.builder();
+		jedisClientConfiguration.connectTimeout(Duration.ofMillis(redis_timeout));// connection timeout in milliseconds
+
+		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration.build());
+		return jedisConFactory;
+	}
+
+	public JedisConnectionFactory jedisConnectionFactoryPrimarySecondary() {
+		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+		redisStandaloneConfiguration.setHostName(redis_host_sec);
+		redisStandaloneConfiguration.setPort(redis_port);
+
+		JedisClientConfigurationBuilder jedisClientConfiguration = JedisClientConfiguration.builder();
+		jedisClientConfiguration.connectTimeout(Duration.ofMillis(redis_timeout));// connection timeout in milliseconds
+
+		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration.build());
+		return jedisConFactory;
 	}
 
 	@Bean(name="jedis")

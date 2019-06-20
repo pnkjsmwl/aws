@@ -3,10 +3,11 @@
  kind: Service
  metadata:
    name: customerprofile
+   namespace: domain
  spec:
    ports:
-     - port: 9097
+     - port: 80
        targetPort: 9097
    selector:
      app: customerprofile
-   type: NodePort
+   type: ClusterIP

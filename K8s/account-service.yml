@@ -3,10 +3,11 @@
  kind: Service
  metadata:
    name: account
+   namespace: domain
  spec:
    ports:
-     - port: 9095
+     - port: 80
        targetPort: 9095
    selector:
      app: account
-   type: NodePort
+   type: ClusterIP
