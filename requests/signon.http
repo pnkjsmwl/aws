@@ -1,0 +1,7 @@
+POST http://localhost:9091/signon HTTP/1.1
+Content-Type: application/json
+
+{
+    "userName" : "Bhavani",
+    "password" : "test123"
+}

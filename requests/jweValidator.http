@@ -1,0 +1,9 @@
+POST http://localhost:9091/token/authorize HTTP/1.1
+Content-Type: application/json
+Authorization: eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.t4w7e9CzsAJOLbMQqMqiLeI3kOjqF5MSZsbBaR8E5erKdn3Eguf5MMHG6zMXhLGgBYIk0zdirHcEQVMXK6x4a8pa2LwjEQ-ZkNJHMvXe56lHxNXo7AMs4hqUbOb7tfFYj25feAOjoTUNUjrtA1cSi8nowNfXjCZh_x1vmhfQfDCWArsFN_iP2LgYP9EYdi5qykjU5W10NEWDga53y4YqTV3IftoS2lMukuMTx-sgfuJC91rltypqBtM80mybzQZoTbOUAqBpr-0qbwOVuCFutNQLfcaqcbj_o82Gx7PHZ82w0_a3NsNwpmT_KO0sx-3pCaOrPFPlKN83sCDQOlwLlA.a-LYJUebagTYmH2oVqrw2g.Zt4LU1y4RkcckbWwIVHh-7TCmW-Q2TkUH54dpVjJEYrBSLY7DRG3ZOMlLjjrXyG_rA2kmB-A5KiJ1cM4ZkXp8jiXGuQbRBNqsjeZUguoHcnA7GVajN9DoZSm3SAC0Wdg-VjPCmaXW7TzoeNL7vjDq4wnfwuml4m_41LaK_IRM4g-ZJFKGa1uG5CY-ogAITbK0bbt-hUNRVCzk4WmIPUYmMmHgghA8KwLt-vP-2_OBYecBm5UlVQLJ1qibQDNsFMTRSP70GJtCgXAW6V93n869M3gMUBRHcRW4WcuzPwcBJI.rqzKxFWPD83ScE53jickiA
+
+{
+    "name" : "AccountsMS",
+    "resource" : "/account/summary",
+    "httpVerb" : "GET"
+}
