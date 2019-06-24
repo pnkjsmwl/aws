@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: account-crud
+  namespace: crud
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: account-crud
+    spec:
+      containers:
+      - name: account-crud
+        image: pnkjsmwl/account-crud:2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8095
+      imagePullSecrets:
+      - name: my-sec

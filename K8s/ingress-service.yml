@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-service
+  namespace: domain
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: a3ca0d9ae923311e9a0d20ac967c050f-2053590351.us-east-1.elb.amazonaws.com
+    http:
+      paths:
+      - path: /account
+        backend:
+          serviceName: account
+          servicePort: 80
+#      - path: /transaction    
+#        backend:
+#          serviceName: transaction
+#          servicePort: 80
+#      - path: /customer    
+#        backend:
+#          serviceName: customerprofile
+#          servicePort: 80    

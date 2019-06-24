@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: customerprofile
+  namespace: domain
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: customerprofile
+    spec:
+      containers:
+      - name: customerprofile
+        image: pnkjsmwl/customerprofile:2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9097
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_HOST
+        - name: REDIS_HOST_SEC
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_HOST_SEC      
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_PORT
+        - name: REDIS_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-configmap
+              key: REDIS_TIMEOUT
+        - name: CLOUD_CONFIG_URI
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: CLOUD_CONFIG_URI
+        - name: PROFILE_CRUD_URL
+          valueFrom:
+            configMapKeyRef:
+              name: service-configmap
+              key: PROFILE_CRUD_URL  
+      imagePullSecrets:
+      - name: my-sec

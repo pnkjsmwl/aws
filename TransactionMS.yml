@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: TransactionMS
+server:
+  port: 9096
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
