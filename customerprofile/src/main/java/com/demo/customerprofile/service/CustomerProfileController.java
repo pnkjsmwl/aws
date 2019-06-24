@@ -1,4 +1,4 @@
-package com.demo.cutomerprofile.service;
+package com.demo.customerprofile.service;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.demo.cutomerprofile.doc.JWTPayload;
-import com.demo.cutomerprofile.utils.RedisUtils;
+import com.demo.customerprofile.doc.JWTPayload;
+import com.demo.customerprofile.utils.RedisUtils;
 
 @RestController
 @RequestMapping("/customer")

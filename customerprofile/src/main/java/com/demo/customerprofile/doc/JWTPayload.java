@@ -1,4 +1,4 @@
-package com.demo.cutomerprofile.doc;
+package com.demo.customerprofile.doc;
 
 import java.util.Date;
 import java.util.List;
