@@ -24,9 +24,9 @@ public class ApplConfig {
 		p2.setAddress("Detroit, Denver");
 
 		CustomerProfile p3 = new CustomerProfile();
-		p2.setEmail("pankaj@hotmail.com");
-		p2.setMobile("+124861234567");
-		p2.setAddress("Irving, Texas");
+		p3.setEmail("pankaj@hotmail.com");
+		p3.setMobile("+124861234567");
+		p3.setAddress("Irving, Texas");
 
 		data.put("Ganesh",p1);
 		data.put("Bhavani",p2);
