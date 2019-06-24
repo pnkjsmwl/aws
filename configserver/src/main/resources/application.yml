@@ -5,7 +5,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/bvnsbprasad/configuration
+          uri: https://github.com/pnkjsmwl/aws.git
           #username: bvnsbprasad@gmail.com
-          passphrase: 1de3e4f11c8ee6824cb3073fbd802a1434d8d482
+          #passphrase: 1de3e4f11c8ee6824cb3073fbd802a1434d8d482
          # skipSslValidation: true
