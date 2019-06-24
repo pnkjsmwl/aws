@@ -1,4 +1,4 @@
-package com.demo.cutomerprofile.exception;
+package com.demo.customerprofile.exception;
 
 public class UnauthorizedException extends Exception {
 

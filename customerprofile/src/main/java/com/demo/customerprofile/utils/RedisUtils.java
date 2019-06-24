@@ -1,4 +1,4 @@
-package com.demo.cutomerprofile.utils;
+package com.demo.customerprofile.utils;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.demo.cutomerprofile.doc.CustomerProfile;
+import com.demo.customerprofile.doc.CustomerProfile;
 
 @Component
 public class RedisUtils {
