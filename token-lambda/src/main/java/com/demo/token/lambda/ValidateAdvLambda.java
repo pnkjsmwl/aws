@@ -35,13 +35,14 @@ public class ValidateAdvLambda implements RequestHandler<APIGatewayProxyRequest,
 		String invokedLambda = invokedFunctionArn.split(":")[6];
 		region = invokedFunctionArn.split(":")[3];
 
+		logger.log("Headers : "+input.getHeaders());
 		logger.log("invokedFunctionArn : "+invokedFunctionArn +", invokedLambda : "+invokedLambda);
-		logger.log("Authorization token : "+input.getHeaders().get("Authorization"));
-		logger.log("AccountId : "+input.getHeaders().get("AccountId"));
+		logger.log("Authorization token : "+input.getHeaders().get("Authorization")!= null? input.getHeaders().get("Authorization") : input.getHeaders().get("authorization"));
+		logger.log("AccountId : "+(input.getHeaders().get("AccountId")!= null? input.getHeaders().get("AccountId") : input.getHeaders().get("accountid")));
 
 		try {
 			if(authenticatorService!=null) {
-				String jwtToken = input.getHeaders().get("Authorization");
+				String jwtToken = input.getHeaders().get("Authorization")!= null? input.getHeaders().get("Authorization") : input.getHeaders().get("authorization");
 				validateResponseMap  = authenticatorService.validateAdv(jwtToken, invokedFunctionArn, input);
 
 				newJWTToken = validateResponseMap.get("token");
