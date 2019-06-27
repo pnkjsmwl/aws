@@ -1,8 +1,6 @@
 package com.demo.account.service;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -80,90 +78,6 @@ public class AccountController {
 
 				redisUtils.setValue(key, account);
 				return ResponseEntity.ok().body(account);
-			}
-		}
-		return null;
-	}
-
-	@SuppressWarnings("rawtypes")
-	@GetMapping("/current-balance")
-	public ResponseEntity<?> getCurrentBalance(@RequestParam String accountNumber,  HttpServletRequest request) throws Exception {
-		if(accountNumber!=null) {
-			String key = accountNumber+":"+request.getRequestURI();
-
-			Map<?,?> mapValue = (Map<?, ?>) redisUtils.getMapValue(key);
-			if(mapValue!=null) {
-				log.info("Due data from Redis : "+mapValue);
-				return ResponseEntity.ok().body(mapValue);
-			}
-
-
-			HttpHeaders requestHeaders = new HttpHeaders();
-			requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-			MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-			params.add("accountNumber", accountNumber);
-
-			HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
-
-			String url = accountCrudUrl+"/account-crud/current-balance";
-			log.info(url);
-			URI uri = UriComponentsBuilder.fromUriString(url)
-					.queryParams(params)
-					.build()
-					.toUri();
-
-			ResponseEntity<HashMap> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, HashMap.class);
-
-			if(respEntity.getStatusCode()==HttpStatus.OK) {
-
-				HashMap hashMap = respEntity.getBody();
-
-				redisUtils.setValue(key, hashMap);
-
-				return ResponseEntity.ok(hashMap);
-			}
-		}
-		return null;
-	}
-
-	@SuppressWarnings("rawtypes")
-	@GetMapping("/due")
-	public ResponseEntity<?> getDue(@RequestParam String accountNumber, HttpServletRequest request) {
-		String key = accountNumber+":"+request.getRequestURI();
-
-		if(accountNumber!=null) {
-
-			Map<?,?> mapValue = (Map<?, ?>) redisUtils.getMapValue(key);
-			if(mapValue!=null) {
-				log.info("Due data from Redis : "+mapValue);
-				return ResponseEntity.ok().body(mapValue);
-			}
-
-			HttpHeaders requestHeaders = new HttpHeaders();
-			requestHeaders.add("Accept", MediaType.APPLICATION_JSON_VALUE);
-
-			MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-			params.add("accountNumber", accountNumber);
-
-			HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
-
-			String url = accountCrudUrl+"/account-crud/due";
-			log.info(url);
-			URI uri = UriComponentsBuilder.fromUriString(url)
-					.queryParams(params)
-					.build()
-					.toUri();
-
-			ResponseEntity<HashMap> respEntity = accountRestTemplate.exchange(uri, HttpMethod.GET, requestEntity, HashMap.class);
-
-			if(respEntity.getStatusCode()==HttpStatus.OK) {
-
-				HashMap resp = respEntity.getBody();
-
-				redisUtils.setValue(key, resp);
-
-				return ResponseEntity.ok(resp);
 			}
 		}
 		return null;

@@ -1,7 +1,6 @@
 package com.demo.account.service;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,29 +29,6 @@ public class AccountCrudController {
 			Account account = accountData.get(accountNumber);
 			log.info("Response : "+account);
 			return ResponseEntity.ok(account);
-		}
-		return null;
-	}
-
-	@GetMapping("/current-balance")
-	public ResponseEntity<?> getCurrentBalance(@RequestParam String accountNumber) {
-		Map<String,String> map = new HashMap<String,String>();
-		if(accountNumber!=null) {
-			map.put("current-balance", accountData.get(accountNumber).getCurrentBalance());
-			log.info("Response : "+map);
-			return ResponseEntity.ok(map);
-		}
-		return null;
-	}
-
-	@GetMapping("/due")
-	public ResponseEntity<?> getDue(@RequestParam String accountNumber) {
-		Map<String,String> map = new HashMap<String,String>();
-		if(accountNumber!=null) {
-			map.put("due_amount", accountData.get(accountNumber).getDueAmount());
-			map.put("due_date", accountData.get(accountNumber).getDueDate());
-			log.info("Response : "+map);
-			return ResponseEntity.ok().body(map);
 		}
 		return null;
 	}
