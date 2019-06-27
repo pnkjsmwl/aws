@@ -168,13 +168,13 @@ public class AuthenticatorService  {
 
 				boolean multiRegion = "true".equals(tokenPayload.getMultiRegion());
 				System.out.println("Multi Region : "+multiRegion);
-
-				if(!multiRegion && request_region!=tokenPayload.getRegionCreated()) {
-					multiRegion = true;
+				boolean crossRegionCleanup = false;
+				if(!multiRegion && !request_region.equals(tokenPayload.getRegionCreated())) {
+					crossRegionCleanup = true;
 					System.out.println("Immediate logout from different region scenario");
 				}
 
-				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), multiRegion)) {
+				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), multiRegion, crossRegionCleanup)) {
 					response.setMessage("Logout Successful");
 					response.setStatus("Success");
 					return new APIGatewayProxyResponse(200, header, gson.toJson(response), true);
@@ -230,7 +230,7 @@ public class AuthenticatorService  {
 			else if("delete".equals(action)) {
 
 				System.out.println("Key to remove : "+key);
-				if(key!=null && redisUtils.removeFromCache(key, false)) {
+				if(key!=null && redisUtils.removeFromCache(key, false, false)) {
 					resp.setMessage("Session & Account cache deleted");
 					resp.setStatus("success");
 					resp.setCode("0");
