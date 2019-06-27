@@ -1,4 +1,4 @@
-package com.bhavani.configserver;
+package com.demo.configserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

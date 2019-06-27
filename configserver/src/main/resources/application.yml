@@ -9,3 +9,5 @@ spring:
           #username: bvnsbprasad@gmail.com
           #passphrase: 1de3e4f11c8ee6824cb3073fbd802a1434d8d482
          # skipSslValidation: true
+server:
+  port: 8081         
