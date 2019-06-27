@@ -1,4 +1,4 @@
-package com.demo.token.lambda;
+package com.demo.token.lambda.unused;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
 import com.demo.token.dao.Credentials;
 
@@ -26,7 +25,7 @@ public class SignonLambda implements RequestHandler<Credentials, ResponseEntity<
 		String invokedLambda = invokedFunctionArn.split(":")[6];
 		logger.log("invokedFunctionArn : "+invokedFunctionArn +", invokedLambda : "+invokedLambda);
 
-		AuthenticatorService authenticatorService = appContext.getBean(AuthenticatorService.class);
+		AuthenticatorServiceUnused authenticatorService = appContext.getBean(AuthenticatorServiceUnused.class);
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 		cred.setArn(invokedFunctionArn);
 		if(authenticatorService!=null) {

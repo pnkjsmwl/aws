@@ -13,8 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -34,7 +32,6 @@ import com.nimbusds.jose.JOSEException;
 
 @RestController
 public class AuthenticatorService  {
-	//private Log log = LogFactory.getLog(AuthenticatorService.class);
 
 	private JWEGenerator jweGenerator;
 	private JWEValidator jweValidator;
@@ -55,41 +52,7 @@ public class AuthenticatorService  {
 		this.commonUtils = commonUtils;
 	}
 
-
-	@RequestMapping(value = "/signon", method = RequestMethod.POST)
-	public ResponseEntity<String> signon(@RequestBody Credentials credentials) {
-		try {
-			UserInfo user = dynamoDbRepo.getUserByUserName(credentials.getUserName());
-			if (user!=null) {
-				if(util.validatePassword(credentials.getPassword(), user.getPassword())){
-					user.setArn(credentials.getArn());
-					user.setRedisKey(user.getUserName()+":"+UUID.randomUUID().toString());
-					String encryptedJWT = jweGenerator.generateJWE(null, user);
-
-					redisUtils.addToCache(user);
-
-					HttpHeaders header = new HttpHeaders();
-					header.add(HttpHeaders.AUTHORIZATION, encryptedJWT);
-					header.add("Region", credentials.getArn().split(":")[3]);
-					//header.add("AccountId", user.getAccountNumber());
-					//header.add("AccountNumber", getLastNDigit(user.getAccountNumber(), 4));
-					return ResponseEntity.ok().headers(header).body("{'Message':'Login Successful'}");
-
-				} else {
-					return ResponseEntity.badRequest().body("{'Error':'Invalid Password'}");
-				}
-			}else {
-				return ResponseEntity.badRequest().body("{'Error':'Invalid Username'}");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(500).body("{'OOPS!!!  Error Occurred'}");
-		}
-	}
-
-
-	@RequestMapping(value = "/signon2", method = RequestMethod.POST)
-	public APIGatewayProxyResponse signon2(@RequestBody APIGatewayProxyRequest request, Context context) {
+	public APIGatewayProxyResponse signon2(APIGatewayProxyRequest request, Context context) {
 		Map<String, String> errorResp = new HashMap<>();
 		try {
 			Credentials cred = gson.fromJson(request.getBody(), Credentials.class);
@@ -143,55 +106,15 @@ public class AuthenticatorService  {
 		}
 	}
 
-	//@RequestMapping(value = "/token/authorize", method = RequestMethod.POST)
-	public String validate2(String jwtToken, String invokedFunctionArn) throws Exception {
-
-		try {
-			String region_current = invokedFunctionArn.split(":")[3];
-			System.out.println("Current Region : "+region_current);
-
-			JWTPayload jwtPayload = jweValidator.validateToken(jwtToken, region_current, null, null);
-			String newEncryptedJWT = null;
-			/*
-			 * If token is valid and present in Redis then
-			 * 1. remove existing key from redis.
-			 * 2. create new token.
-			 * 3. store new token in redis.
-			 * */
-
-			if(jwtPayload.isValid())
-			{
-				System.out.println("User found in different region : "+jwtPayload.isFoundInDiffRegion());
-				redisUtils.removeFromCache(jwtPayload.getRedisKey(), jwtPayload.isFoundInDiffRegion());
-
-				UserInfo user = new UserInfo(jwtPayload.getUserName(), invokedFunctionArn, jwtPayload.getRedisKey());
-				newEncryptedJWT = jweGenerator.generateJWE(null, user);
-
-				redisUtils.addToCache(user);
-
-			}else {
-				throw new InvalidTokenException("Token not valid !!");
-			}
-			return newEncryptedJWT;
-
-		}catch(IllegalAccessException | NoSuchAlgorithmException |InvalidKeySpecException |ParseException | IOException | JOSEException e) {
-			e.printStackTrace();
-			throw e;
-		} catch(Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-
-	}
-
 	public Map<String, String> validateAdv(String jwtToken, String invokedFunctionArn, APIGatewayProxyRequest input)throws Exception {
 		Map<String, String> validateResponseMap = new HashMap<String, String>();
+		Map<String, String> data = new HashMap<>();
 		try {
 			String region_current = invokedFunctionArn.split(":")[3];
 			System.out.println("Current Region : "+region_current);
 			String accountId = input.getHeaders().get("AccountId")!= null? input.getHeaders().get("AccountId") : input.getHeaders().get("accountid");
 
-			JWTPayload jwtPayload = jweValidator.validateToken(jwtToken, region_current, invokedFunctionArn, accountId);
+			JWTPayload jwtPayload = jweValidator.validateToken(jwtToken, region_current, invokedFunctionArn, accountId, "validate");
 			String newEncryptedJWT = null;
 
 			if(jwtPayload.isValid()) {
@@ -201,7 +124,12 @@ public class AuthenticatorService  {
 				// redisUtils.removeFromCache(jwtPayload.getRedisKey(), jwtPayload.isFoundInDiffRegion());
 
 				UserInfo user = new UserInfo(jwtPayload.getUserName(), invokedFunctionArn, jwtPayload.getRedisKey());
-				newEncryptedJWT = jweGenerator.generateJWE(null, user);
+
+				if(jwtPayload.isFoundInDiffRegion()) {
+					data.put("multi_region", "true");
+				}
+
+				newEncryptedJWT = jweGenerator.generateJWE(data, user);
 
 				/* Session entry */
 				redisUtils.addToCache(user);
@@ -212,7 +140,6 @@ public class AuthenticatorService  {
 					String accountNumber = redisUtils.getAccount(jwtPayload.getRedisKey(), accountId);
 					validateResponseMap.put("accountNumber", accountNumber);
 				}
-
 			}else {
 				throw new InvalidTokenException("Token not valid !!");
 			}
@@ -225,72 +152,6 @@ public class AuthenticatorService  {
 			e.printStackTrace();
 			throw e;
 		}
-
-	}
-
-	public Response validateTokenDiffRegion(String token, String invokedFunctionArn, APIGatewayProxyRequest input) throws Exception {
-		Response resp = new Response();
-		try {
-			String region_current = invokedFunctionArn.split(":")[3];
-			System.out.println("Current Region : "+region_current);
-			String accountId = input.getHeaders().get("AccountId")!= null? input.getHeaders().get("AccountId") : input.getHeaders().get("accountid");
-			System.out.println("AccountId : "+accountId);
-			JWTPayload jwtPayload = jweValidator.validateToken(token, region_current, invokedFunctionArn, accountId);
-			
-			if(jwtPayload.isValid())
-			{
-				Map<String, String> accountMap = redisUtils.getAccountMap(jwtPayload.getRedisKey(), accountId);
-				System.out.println("Account Map from redis : "+accountMap);
-				resp.setMessage("Valid Token");
-				resp.setStatus("success");
-				resp.setCode("0");
-				resp.setMap(accountMap);
-			}else {
-				resp.setMessage("Invalid Token");
-				resp.setStatus("fail");
-				resp.setCode("1");
-			}
-			return resp;
-
-		}catch(IllegalAccessException | NoSuchAlgorithmException |InvalidKeySpecException |ParseException | IOException | JOSEException e) {
-			e.printStackTrace();
-			throw e;
-		} catch(Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-	}
-
-	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public ResponseEntity<String> logout(String jwtToken, Context context) {
-		Response response = new Response();
-		try {
-			JWTPayload tokenPayload = jweValidator.extractTokenData(jwtToken);
-			if (tokenPayload!=null && jweValidator.verifyTokenInfo(tokenPayload)) {
-				String request_region = context.getInvokedFunctionArn().split(":")[3];
-				System.out.println("Request region : "+request_region+", Token latest region : "+tokenPayload.getRegionLatest());
-
-				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()))) {
-					response.setMessage("Logout Successful");
-					response.setStatus("Success");
-					return ResponseEntity.ok().body(gson.toJson(response));
-				}else {
-					response.setMessage("Logout Unsuccessful");
-					response.setStatus("Fail");
-					return ResponseEntity.ok().body(gson.toJson(response));
-				}
-			}else {
-				response.setMessage("Invalid Username or Expired Token");
-				response.setStatus("Fail");
-				return ResponseEntity.badRequest().body(gson.toJson(response));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			response.setMessage("OOPS!!! Error Occurred");
-			response.setStatus("Fail");
-			response.setError(e.getMessage());
-			return ResponseEntity.status(500).body(gson.toJson(response));
-		}
 	}
 
 	public APIGatewayProxyResponse logout2(String jwtToken, Context context) {
@@ -300,11 +161,20 @@ public class AuthenticatorService  {
 		header.put("Access-Control-Expose-Headers", "*");
 		try {
 			JWTPayload tokenPayload = jweValidator.extractTokenData(jwtToken);
-			if (tokenPayload!=null && jweValidator.verifyTokenInfo(tokenPayload)) {
-				String request_region = context.getInvokedFunctionArn().split(":")[3];
-				System.out.println("Request region : "+request_region+", Token latest region : "+tokenPayload.getRegionLatest());
+			String request_region = context.getInvokedFunctionArn().split(":")[3];
+			System.out.println("Token created in region : "+tokenPayload.getRegionCreated()+", User trying logout from :"+request_region);
 
-				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()))) {
+			if (tokenPayload!=null && jweValidator.verifyTokenInfo(tokenPayload, "delete")) {
+
+				boolean multiRegion = "true".equals(tokenPayload.getMultiRegion());
+				System.out.println("Multi Region : "+multiRegion);
+
+				if(!multiRegion && request_region!=tokenPayload.getRegionCreated()) {
+					multiRegion = true;
+					System.out.println("Immediate logout from different region scenario");
+				}
+
+				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), multiRegion)) {
 					response.setMessage("Logout Successful");
 					response.setStatus("Success");
 					return new APIGatewayProxyResponse(200, header, gson.toJson(response), true);
@@ -314,7 +184,7 @@ public class AuthenticatorService  {
 					return new APIGatewayProxyResponse(403, header, gson.toJson(response), true);
 				}
 			}else {
-				response.setMessage("Invalid Username or Expired Token");
+				response.setMessage("Invalid Username");
 				response.setStatus("Fail");
 				return new APIGatewayProxyResponse(403, header, gson.toJson(response), true);
 			}
@@ -324,6 +194,60 @@ public class AuthenticatorService  {
 			response.setStatus("Fail");
 			response.setError(e.getMessage());
 			return new APIGatewayProxyResponse(500, header, gson.toJson(response), true);
+		}
+	}
+
+	public Response performActionDiffRegion(String invokedFunctionArn, APIGatewayProxyRequest input) throws Exception {
+		Response resp = new Response();
+		try {
+			String region_current = invokedFunctionArn.split(":")[3];
+			System.out.println("Current Region : "+region_current);
+			String token = input.getHeaders().get("Authorization")!= null? input.getHeaders().get("Authorization") : input.getHeaders().get("authorization");
+			String accountId = input.getHeaders().get("AccountId")!= null? input.getHeaders().get("AccountId") : input.getHeaders().get("accountid");
+			String key = input.getHeaders().get("Key")!= null? input.getHeaders().get("Key") : input.getHeaders().get("key");
+			String action = input.getHeaders().get("Action")!= null? input.getHeaders().get("Action") : input.getHeaders().get("action");
+
+			System.out.println("AccountId : "+accountId+", Action : "+action);
+
+			if("validate".equals(action)) {
+
+				JWTPayload jwtPayload = jweValidator.validateToken(token, region_current, invokedFunctionArn, accountId, action);
+
+				if(jwtPayload.isValid())
+				{
+					Map<String, String> accountMap = redisUtils.getAccountMap(jwtPayload.getRedisKey(), accountId);
+					System.out.println("Account Map from redis : "+accountMap);
+					resp.setMessage("Valid Token");
+					resp.setStatus("success");
+					resp.setCode("0");
+					resp.setMap(accountMap);
+				}else {
+					resp.setMessage("Invalid Token");
+					resp.setStatus("fail");
+					resp.setCode("1");
+				}
+			}
+			else if("delete".equals(action)) {
+
+				System.out.println("Key to remove : "+key);
+				if(key!=null && redisUtils.removeFromCache(key, false)) {
+					resp.setMessage("Session & Account cache deleted");
+					resp.setStatus("success");
+					resp.setCode("0");
+				}else {
+					resp.setMessage("Session & Account cache not deleted");
+					resp.setStatus("fail");
+					resp.setCode("1");
+				}
+			}
+			return resp;
+
+		}catch(IllegalAccessException | NoSuchAlgorithmException |InvalidKeySpecException |ParseException | IOException | JOSEException e) {
+			e.printStackTrace();
+			throw e;
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw e;
 		}
 	}
 

@@ -1,4 +1,4 @@
-package com.demo.token.lambda;
+package com.demo.token.lambda.unused;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -6,8 +6,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
+import com.demo.token.dao.AuthPolicy;
 import com.demo.token.dao.TokenAuthRequest;
 
 public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPolicy> {
@@ -21,7 +21,7 @@ public class ValidateLambda implements RequestHandler<TokenAuthRequest, AuthPoli
 		 * eg. arn:aws:lambda:us-east-2:161770494564:function:signon
 		 * eg. arn:aws:dynamodb:us-east-2:161770494564:table/user_info
 		 *  */
-		AuthenticatorService authenticatorService = appContext.getBean(AuthenticatorService.class);
+		AuthenticatorServiceUnused authenticatorService = appContext.getBean(AuthenticatorServiceUnused.class);
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 
 		String principalId = "xxxx";
