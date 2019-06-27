@@ -1,6 +1,0 @@
-spring:
-  application:
-    name: AuthenticatorMS
-tokenExpiryInterval: 600000
-server:
-  port: 9091

@@ -62,7 +62,7 @@ public class JWEGenerator {
 				.claim("region_latest", arn[3]) // adding AWS region fetched from AWS context
 				.claim("userName", userInfo.getUserName()) // this will be validated against Redis cache
 				.claim("role", "CUSTOMER_ROLE") // this is default role for all users
-				.claim("userName-key", userInfo.getRedisKey()) // this is key for Redis
+				.claim("userName-key", userInfo.getRedisKey()) // this is session key for Redis
 				.jwtID(UUID.randomUUID().toString())
 				;
 
