@@ -25,8 +25,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import redis.clients.jedis.Jedis;
-
 @Configuration
 @ComponentScan(basePackages= {"com.demo"})
 @PropertySource("classpath:application.properties")
@@ -38,17 +36,11 @@ public class ApplConfig {
 	@Value("${dynamodb.region}")
 	private String region;
 
-	@Value("${aws.access.key}")
-	private String awsAccessKey;
-
-	@Value("${aws.secret.key}")
-	private String awsSecretKey;
-
 	@Value("${redis.host}")
 	private String redis_host;
 
-	@Value("${redis.host.sec}")
-	private String redis_host_sec;
+	/*@Value("${redis.host.sec}")
+	private String redis_host_sec;*/
 
 	@Value("${redis.port}")
 	private int redis_port;
@@ -72,13 +64,13 @@ public class ApplConfig {
 		return redisTemplate;
 	}
 
-	@Bean(name="redisTemplateSec")
+	/*@Bean(name="redisTemplateSec")
 	public <T> RedisTemplate<String, T> redisTemplateSecondary() {
 		RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(jedisConnectionFactoryPrimarySecondary());
 		redisTemplate.setEnableTransactionSupport(true); 
 		return redisTemplate; 
-	}
+	}*/
 
 	public JedisConnectionFactory jedisConnectionFactoryPrimary() {
 		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
@@ -92,7 +84,7 @@ public class ApplConfig {
 		return jedisConFactory;
 	}
 
-	public JedisConnectionFactory jedisConnectionFactoryPrimarySecondary() {
+	/*public JedisConnectionFactory jedisConnectionFactoryPrimarySecondary() {
 		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
 		redisStandaloneConfiguration.setHostName(redis_host_sec);
 		redisStandaloneConfiguration.setPort(redis_port);
@@ -102,9 +94,9 @@ public class ApplConfig {
 
 		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration.build());
 		return jedisConFactory;
-	}
+	}*/
 
-	@Bean(name="jedis")
+	/*@Bean(name="jedis")
 	@Primary
 	public Jedis jedis() {
 		System.out.println("Redis Timeout : "+redis_timeout);
@@ -115,7 +107,7 @@ public class ApplConfig {
 	public Jedis jedisSec() {
 		System.out.println("Redis Timeout : "+redis_timeout);
 		return new Jedis(redis_host_sec, redis_port, redis_timeout);
-	}
+	}*/
 
 	@Bean(name = "policy")
 	public HashMap<String, List<String>> getPolicy() {
@@ -126,24 +118,6 @@ public class ApplConfig {
 		policy.put("GET/profile/address",Arrays.asList("PROFILE_ROLE","ADMIN"));
 		return policy;
 	}
-
-	/*@Bean
-	 Similar to a JDBCTemplate 
-	public DynamoDBMapper dynamoDBMapper() {
-		return new DynamoDBMapper(amazonDynamoDB());
-	}
-
-	public AmazonDynamoDB amazonDynamoDB() {
-		System.out.println("DynamoDB Configuration : \n"+serviceEndpoint+"\n"+region+"\n"+awsAccessKey+"\n"+awsSecretKey+"\n");
-		AwsClientBuilder.EndpointConfiguration endpointConfiguration = new AwsClientBuilder.EndpointConfiguration(serviceEndpoint, region);
-		AWSStaticCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
-
-		AmazonDynamoDB amazonDynamoDB = AmazonDynamoDBClientBuilder.standard()
-				.withEndpointConfiguration(endpointConfiguration)
-				.withCredentials(credentialsProvider)
-				.build();
-		return amazonDynamoDB;
-	}*/
 
 	@Bean
 	public DynamoDBMapper dynamoDBMapper() {

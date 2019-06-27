@@ -1,6 +1,5 @@
 package com.demo.token.utils;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -11,8 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.demo.token.dao.AccountInfo;
-import com.demo.token.dao.JWTPayload;
 import com.demo.token.dao.UserInfo;
 
 @Component
@@ -30,29 +27,16 @@ public class RedisUtils {
 	@Qualifier("redisTemplate")
 	private RedisTemplate<String, String> stringRedisTemplate;
 
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, Map<?,?>> mapRedisTemplateSec;
-
-	@Autowired
-	@Qualifier("redisTemplateSec")
-	private RedisTemplate<String, String> stringRedisTemplateSec;
-
 	public void addToCache(UserInfo user) throws Exception {
 		System.out.println("Redis Key : "+user.getRedisKey());
 		setValue(user.getRedisKey(), token_value);
 		System.out.println("Value from redis : "+getStringValue(user.getRedisKey()));
 	}
 
-	public void addAccountIdToCache(UserInfo user, String sessionId) {
-		Map<String,String> map = new HashMap<>();
-		if(user!=null && !user.getAccount().isEmpty()) {
-			for(AccountInfo account : user.getAccount()) {
-				map.put(account.getAccountId(), account.getAccountNumber());
-			}
-			setValue("account:"+sessionId, map);
-			validateAccountFromRedis("account:"+sessionId);
-		}
+	public void addAccountIdToCache(Map<String,String> map, String sessionId) {
+		String key = "account:"+sessionId;
+		setValue(key, map);
+		validateAccountFromRedis(key);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -68,18 +52,28 @@ public class RedisUtils {
 		return accountNumber;
 	}
 
+	@SuppressWarnings("unchecked")
+	public Map<String,String> getAccountMap(String key, String accountId) {
+		String redisKey = "account:"+key.split(":")[1];
+		System.out.println("Account Key : "+redisKey);
+		Map<String,String> map = (Map<String, String>) getMapValue(redisKey);
+		System.out.println("Map from Redis : "+map);
+		return map;
+	}
+
 	public boolean removeFromCache(String redisKey, boolean foundInDiffRegion) {
-		RedisTemplate<String,String> redisTemplate;
+		/*RedisTemplate<String,String> redisTemplate;
 		if(!foundInDiffRegion) {
 			redisTemplate = stringRedisTemplate;
 		}else {
 			redisTemplate = stringRedisTemplateSec;
-		}
-		String checkUser = redisTemplate.opsForValue().get( redisKey );
+		}*/
+
+		String checkUser = stringRedisTemplate.opsForValue().get( redisKey );
 
 		System.out.println("User check : "+checkUser);
 		if("valid".equals(checkUser)) {
-			Boolean delete = redisTemplate.delete(redisKey);
+			Boolean delete = stringRedisTemplate.delete(redisKey);
 			System.out.println("Key deleted from Redis : "+delete);
 			return true;
 		}else {
@@ -88,23 +82,13 @@ public class RedisUtils {
 		}
 	}
 
-	public String tokenValueFromRedis(JWTPayload payload, String region_current) {
-		System.out.println("Key to Redis : "+payload.getRedisKey());
+	public String tokenValueFromRedis(String key, String region_current) {
+		System.out.println("Key to Redis : "+key);
 		String tokenValueFromRedis = null;
 
-		if(region_current.equals(payload.getRegionLatest())) {
-			tokenValueFromRedis = stringRedisTemplate.opsForValue().get(payload.getRedisKey());
+		tokenValueFromRedis = stringRedisTemplate.opsForValue().get(key);
+		System.out.println("Value from Primary redis against token : "+tokenValueFromRedis);
 
-			System.out.println("Value from Primary redis against token : "+tokenValueFromRedis);
-		}
-		else {
-			tokenValueFromRedis = stringRedisTemplateSec.opsForValue().get(payload.getRedisKey());
-			if(tokenValueFromRedis!=null) {
-				payload.setFoundInDiffRegion(true);
-				payload.setRegionLatest(region_current);
-			}
-			System.out.println("Value from Secondary redis against token : "+tokenValueFromRedis);
-		}
 		return tokenValueFromRedis;
 	}
 
@@ -120,20 +104,20 @@ public class RedisUtils {
 	public Object getStringValue( final String key ) {
 		log.info("Getting from primary cache.");
 		String string = stringRedisTemplate.opsForValue().get( key );
-		if(string==null) {
+		/*if(string==null) {
 			log.info("Getting from secondary cache.");
 			return stringRedisTemplateSec.opsForValue().get( key );
-		}
+		}*/
 		return string;
 	}
 
 	public Object getMapValue( final String key ) {
 		log.info("Getting from primary cache.");
 		Map<?, ?> map = mapRedisTemplate.opsForValue().get( key );
-		if(map.isEmpty()) {
+		/*if(map.isEmpty()) {
 			log.info("Getting from secondary cache.");
 			return mapRedisTemplateSec.opsForValue().get( key );
-		}
+		}*/
 		return map;
 	}
 

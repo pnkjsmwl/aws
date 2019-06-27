@@ -1,4 +1,4 @@
-package com.demo.token.authenticator.utils;
+package com.demo.token.utils;
 
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
@@ -12,7 +12,7 @@ import javax.crypto.spec.PBEKeySpec;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommonUtils {
+public class AuthUtils {
 
 	private final String SECRET_KEY_GEN_ALGO = "PBKDF2WithHmacSHA512";
 	private final String SECURE_RANDOM_ALGO = "SHA1PRNG";

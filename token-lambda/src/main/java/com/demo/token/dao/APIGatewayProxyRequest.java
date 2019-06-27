@@ -17,7 +17,6 @@ public class APIGatewayProxyRequest {
     private String body;
     private Boolean isBase64Encoded;
     private String methodArn;
-    private Map<String, String> requestContext;
 
     public APIGatewayProxyRequest() {}
 

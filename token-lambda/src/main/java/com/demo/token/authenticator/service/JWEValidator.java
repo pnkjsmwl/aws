@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
@@ -23,6 +24,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import com.demo.token.dao.JWTPayload;
+import com.demo.token.dao.Response;
+import com.demo.token.gateway.APIGatewayClient;
 import com.demo.token.utils.RedisUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSADecrypter;
@@ -34,6 +37,9 @@ public class JWEValidator{
 	@Value("${tokenExpiryInterval}")
 	private long tokenExpiryInterval;
 
+	@Value("${token_value}")
+	private String tokenValue;
+
 	@Autowired
 	@Qualifier("policy")
 	private HashMap<String,List<String>> policy;
@@ -41,23 +47,43 @@ public class JWEValidator{
 	@Autowired
 	private RedisUtils redisUtils;
 
-	@Value("${token_value}")
-	private String tokenValue;
+	@Autowired
+	private APIGatewayClient apiGatewayClient;
 
 	private Log log = LogFactory.getLog(JWEValidator.class);
 	private String errorMessage;
 
-	public JWTPayload validateToken(String JWEToken, String region_current) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
+	public JWTPayload validateToken(String JWEToken, String region_current, String invokedFunctionArn, String accountId) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
 
 		JWTPayload payload = extractTokenData(JWEToken);
 		System.out.println("Region created : "+payload.getRegionCreated());
-		String tokenValueFromRedis = "";
+		String tokenValueFromRedis = null;
 
-		tokenValueFromRedis = redisUtils.tokenValueFromRedis(payload, region_current);
+		if(region_current.equals(payload.getRegionLatest())) {
+			tokenValueFromRedis = redisUtils.tokenValueFromRedis(payload.getRedisKey(), region_current);
+		}
+		else {
+			Response resp = apiGatewayClient.callAPIGatewayDiffRegion(JWEToken, accountId);
+			payload.setFoundInDiffRegion(true);
+			payload.setRegionLatest(region_current);
 
-		//redisUtils.validateAccountFromRedis(payload);
-		
-		
+			if(resp!=null && "0".equals(resp.getCode())) {
+				/* 1. Make session entry in current region (done in caller class) */ 
+
+				System.out.println("Response Code/Message : "+resp.getCode()+"/"+resp.getMessage());
+				System.out.println("Account Map : "+resp.getMap());
+				tokenValueFromRedis = tokenValue;
+
+				/*  2. Make account map entry in current region */
+
+				String sessionId = payload.getRedisKey().split(":")[1];
+				System.out.println("Session Id : "+sessionId);
+				Map<String, String> accountMap = resp.getMap();
+
+				redisUtils.addAccountIdToCache(accountMap, sessionId);
+			}
+		}
+
 		if(tokenValueFromRedis==null)
 			throw new IllegalAccessException("JWT token validation failed, not found in Cache.");
 		else if(!verifyTokenInfo(payload))
