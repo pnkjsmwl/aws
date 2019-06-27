@@ -48,7 +48,6 @@ public class JWEGenerator {
 
 
 	public JWTClaimsSet buildClaimSet(Map<String, String> data, UserInfo userInfo) {
-		// Session id yet to add
 		Date now = new Date();
 		String[] arn = userInfo.getArn().split(":");
 		JWTClaimsSet.Builder jwtClaimsBuilder = new JWTClaimsSet.Builder()
@@ -66,7 +65,7 @@ public class JWEGenerator {
 				.jwtID(UUID.randomUUID().toString())
 				;
 
-		if (data != null) {
+		if (data != null && !data.isEmpty()) {
 			for (Map.Entry<String, String> e : data.entrySet()) {
 				jwtClaimsBuilder.claim(e.getKey(), e.getValue());
 			}

@@ -1,4 +1,4 @@
-package com.demo.token.lambda;
+package com.demo.token.lambda.unused;
 
 import java.util.Map;
 
@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.demo.token.authenticator.service.AuthenticatorService;
 import com.demo.token.config.ApplConfig;
 import com.demo.token.dao.TokenAuthRequest;
 
@@ -18,7 +17,7 @@ public class LogoutLambda implements RequestHandler<TokenAuthRequest, ResponseEn
 	@Override
 	public ResponseEntity<String> handleRequest(TokenAuthRequest input, Context context) {
 		final ApplicationContext appContext = new AnnotationConfigApplicationContext(ApplConfig.class);
-		AuthenticatorService authenticatorService = appContext.getBean(AuthenticatorService.class);
+		AuthenticatorServiceUnused authenticatorService = appContext.getBean(AuthenticatorServiceUnused.class);
 		System.out.println("authenticatorService from appContext : "+authenticatorService);
 		ResponseEntity<String> response = null;
 		LambdaLogger logger = context.getLogger();

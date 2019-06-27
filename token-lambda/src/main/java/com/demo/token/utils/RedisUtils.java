@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.demo.token.dao.Response;
 import com.demo.token.dao.UserInfo;
+import com.demo.token.gateway.APIGatewayClient;
 
 @Component
 public class RedisUtils {
@@ -26,6 +28,9 @@ public class RedisUtils {
 	@Autowired
 	@Qualifier("redisTemplate")
 	private RedisTemplate<String, String> stringRedisTemplate;
+
+	@Autowired
+	private APIGatewayClient apiGatewayClient;
 
 	public void addToCache(UserInfo user) throws Exception {
 		System.out.println("Redis Key : "+user.getRedisKey());
@@ -61,9 +66,9 @@ public class RedisUtils {
 		return map;
 	}
 
-	public boolean removeFromCache(String redisKey, boolean foundInDiffRegion) {
+	public boolean removeFromCache(String redisKey, boolean multiRegion) {
 		/*RedisTemplate<String,String> redisTemplate;
-		if(!foundInDiffRegion) {
+		if(!multiRegion) {
 			redisTemplate = stringRedisTemplate;
 		}else {
 			redisTemplate = stringRedisTemplateSec;
@@ -74,8 +79,22 @@ public class RedisUtils {
 		System.out.println("User check : "+checkUser);
 		if("valid".equals(checkUser)) {
 			Boolean delete = stringRedisTemplate.delete(redisKey);
-			System.out.println("Key deleted from Redis : "+delete);
-			return true;
+			System.out.println("Session deleted from Redis : "+delete);
+
+			delete = removeAccountFromCache(redisKey);
+			System.out.println("Account deleted from Redis : "+delete);
+
+			if(multiRegion) {
+
+				Response resp = apiGatewayClient.callAPIGatewayDiffRegion(null, null, "delete", redisKey);
+
+				if(resp!=null && "0".equals(resp.getCode())) {
+					return true;
+				}else {
+					return false;
+				}
+			}
+			return delete;
 		}else {
 			System.out.println("User not found in cache.");
 			return false;
@@ -126,6 +145,21 @@ public class RedisUtils {
 		Map<String,String> mapValue = (Map<String, String>) getMapValue(key);
 		System.out.println("Data from Redis : "+mapValue);
 
+	}
+
+	public boolean removeAccountFromCache(String key) {
+		Boolean delete = false;
+		if(key!=null) {
+			String redisKey = "account:"+key.split(":")[1];
+			Map<?, ?> map = mapRedisTemplate.opsForValue().get( redisKey );
+			System.out.println("Map from Redis : "+map);
+
+			if(map!=null && !map.isEmpty()) {
+				delete = mapRedisTemplate.delete(redisKey);
+				System.out.println("Key "+key+" deleted from Redis : "+delete);
+			}
+		}
+		return delete;
 	}
 
 }

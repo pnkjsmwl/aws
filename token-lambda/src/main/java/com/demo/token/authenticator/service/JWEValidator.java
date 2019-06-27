@@ -53,7 +53,7 @@ public class JWEValidator{
 	private Log log = LogFactory.getLog(JWEValidator.class);
 	private String errorMessage;
 
-	public JWTPayload validateToken(String JWEToken, String region_current, String invokedFunctionArn, String accountId) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
+	public JWTPayload validateToken(String JWEToken, String region_current, String invokedFunctionArn, String accountId, String action) throws ParseException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException, IllegalAccessException {
 
 		JWTPayload payload = extractTokenData(JWEToken);
 		System.out.println("Region created : "+payload.getRegionCreated());
@@ -63,7 +63,7 @@ public class JWEValidator{
 			tokenValueFromRedis = redisUtils.tokenValueFromRedis(payload.getRedisKey(), region_current);
 		}
 		else {
-			Response resp = apiGatewayClient.callAPIGatewayDiffRegion(JWEToken, accountId);
+			Response resp = apiGatewayClient.callAPIGatewayDiffRegion(JWEToken, accountId, action, null);
 			payload.setFoundInDiffRegion(true);
 			payload.setRegionLatest(region_current);
 
@@ -86,7 +86,7 @@ public class JWEValidator{
 
 		if(tokenValueFromRedis==null)
 			throw new IllegalAccessException("JWT token validation failed, not found in Cache.");
-		else if(!verifyTokenInfo(payload))
+		else if(!verifyTokenInfo(payload, null))
 			throw new IllegalAccessException("JWT token validation failed, "+errorMessage);
 		else if(tokenValue.equals(tokenValueFromRedis))
 			payload.setValid(true);
@@ -113,12 +113,13 @@ public class JWEValidator{
 		payload.setRedisKey(jwtClaimsSet.getStringClaim("userName-key"));
 		payload.setRegionCreated(jwtClaimsSet.getStringClaim("region_created"));
 		payload.setRegionLatest(jwtClaimsSet.getStringClaim("region_latest"));
+		payload.setMultiRegion(jwtClaimsSet.getStringClaim("multi_region"));
 		return payload;
 	}
 
-	public boolean verifyTokenInfo(JWTPayload payload){
+	public boolean verifyTokenInfo(JWTPayload payload, String action){
 		Date now = new Date();
-		if (now.getTime() - payload.getExpirationTime().getTime()  > tokenExpiryInterval){
+		if (!"delete".equals(action) && now.getTime() - payload.getExpirationTime().getTime()  > tokenExpiryInterval){
 			errorMessage = "JWT token expired !!!";
 			log.error("JWT token expired !!!");
 			return false;

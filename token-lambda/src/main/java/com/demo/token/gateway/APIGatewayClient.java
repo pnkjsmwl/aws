@@ -24,13 +24,17 @@ public class APIGatewayClient {
 	@Value("${token_value}")
 	private String tokenValue;
 
-	public Response callAPIGatewayDiffRegion(String jwtToken, String accountId) {
+	public Response callAPIGatewayDiffRegion(String jwtToken, String accountId, String action, String redisKey) {
 
 		RestTemplate rt = new RestTemplate();
 		HttpHeaders requestHeaders = new HttpHeaders();
 		requestHeaders.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-		requestHeaders.add("Authorization", jwtToken);
-		requestHeaders.add("AccountId", accountId);
+		
+		if(jwtToken!=null) requestHeaders.add("Authorization", jwtToken) ;
+		if(accountId!=null) requestHeaders.add("AccountId", accountId);
+		if(redisKey!=null) requestHeaders.add("Key", redisKey);
+		
+		requestHeaders.add("Action", action);
 
 		HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
 
@@ -41,7 +45,7 @@ public class APIGatewayClient {
 
 		ResponseEntity<Response> respEntity = rt.exchange(uri, HttpMethod.GET, requestEntity, Response.class);
 		System.out.println("Response status code : "+respEntity.getStatusCode());
-		
+
 		if(respEntity.getStatusCode()==HttpStatus.OK) {
 			System.out.println("Response : "+respEntity.getBody());
 			Response resp = respEntity.getBody();
@@ -51,5 +55,4 @@ public class APIGatewayClient {
 		}
 		return null;
 	}
-
 }

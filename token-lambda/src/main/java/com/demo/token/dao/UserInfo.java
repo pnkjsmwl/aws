@@ -90,7 +90,4 @@ public class UserInfo {
 		this.redisKey = redisKey;
 	}
 
-
-
-
 }

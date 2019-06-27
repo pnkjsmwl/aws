@@ -18,6 +18,7 @@ public class JWTPayload{
 	private String regionCreated;
 	private String regionLatest;
 	private boolean foundInDiffRegion;
+	private String multiRegion;
 
 	public String getIssuer() {
 		return issuer;
@@ -102,5 +103,11 @@ public class JWTPayload{
 	}
 	public void setFoundInDiffRegion(boolean foundInDiffRegion) {
 		this.foundInDiffRegion = foundInDiffRegion;
+	}
+	public String getMultiRegion() {
+		return multiRegion;
+	}
+	public void setMultiRegion(String multiRegion) {
+		this.multiRegion = multiRegion;
 	}
 }
