@@ -33,23 +33,4 @@ public class CustomerProfileCrudController{
 		map.put("Address", profileData.get(userName).getAddress());
 		return ResponseEntity.ok().body(map);
 	}
-
-	@GetMapping("/email")
-	public ResponseEntity<String> getEmail(@RequestParam String userName){
-		log.info("Inside get email !!!");
-		return ResponseEntity.ok().body(String.format("{\"Email\": \"%s\"}",profileData.get(userName).getEmail()));
-	}
-
-	@GetMapping("/mobile")
-	public ResponseEntity<String> getMobile(@RequestParam String userName){
-		log.info("Inside get mobile !!!");
-		return ResponseEntity.ok().body(String.format("{\"Mobile\": \"%s\"}",profileData.get(userName).getMobile()));
-	}
-
-	@GetMapping("/address")
-	public ResponseEntity<String> getAddress(@RequestParam String userName){
-		log.info("Inside get address !!!");
-		return ResponseEntity.ok().body(String.format("{\"Address\": \"%s\"}",profileData.get(userName).getAddress()));
-	}
-
 }
