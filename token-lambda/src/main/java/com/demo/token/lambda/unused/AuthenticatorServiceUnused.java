@@ -161,7 +161,7 @@ public class AuthenticatorServiceUnused  {
 			if(jwtPayload.isValid())
 			{
 				System.out.println("User found in different region : "+jwtPayload.isFoundInDiffRegion());
-				redisUtils.removeFromCache(jwtPayload.getRedisKey(), jwtPayload.isFoundInDiffRegion());
+				redisUtils.removeFromCache(jwtPayload.getRedisKey(), jwtPayload.isFoundInDiffRegion(), false);
 
 				UserInfo user = new UserInfo(jwtPayload.getUserName(), invokedFunctionArn, jwtPayload.getRedisKey());
 				newEncryptedJWT = jweGenerator.generateJWE(null, user);
@@ -269,7 +269,7 @@ public class AuthenticatorServiceUnused  {
 				String request_region = context.getInvokedFunctionArn().split(":")[3];
 				System.out.println("Request region : "+request_region+", Token latest region : "+tokenPayload.getRegionLatest());
 
-				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()))) {
+				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()), false)) {
 					response.setMessage("Logout Successful");
 					response.setStatus("Success");
 					return ResponseEntity.ok().body(gson.toJson(response));
@@ -303,7 +303,7 @@ public class AuthenticatorServiceUnused  {
 				String request_region = context.getInvokedFunctionArn().split(":")[3];
 				System.out.println("Request region : "+request_region+", Token latest region : "+tokenPayload.getRegionLatest());
 
-				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()))) {
+				if(redisUtils.removeFromCache(tokenPayload.getRedisKey(), !request_region.equals(tokenPayload.getRegionLatest()), false)) {
 					response.setMessage("Logout Successful");
 					response.setStatus("Success");
 					return new APIGatewayProxyResponse(200, header, gson.toJson(response), true);

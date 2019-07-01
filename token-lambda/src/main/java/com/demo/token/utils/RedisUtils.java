@@ -66,7 +66,7 @@ public class RedisUtils {
 		return map;
 	}
 
-	public boolean removeFromCache(String redisKey, boolean multiRegion) {
+	public boolean removeFromCache(String redisKey, boolean multiRegion, boolean crossRegionCleanup) {
 		/*RedisTemplate<String,String> redisTemplate;
 		if(!multiRegion) {
 			redisTemplate = stringRedisTemplate;
@@ -74,30 +74,42 @@ public class RedisUtils {
 			redisTemplate = stringRedisTemplateSec;
 		}*/
 
-		String checkUser = stringRedisTemplate.opsForValue().get( redisKey );
+		if(crossRegionCleanup) {
+			Response resp = apiGatewayClient.callAPIGatewayDiffRegion(null, null, "delete", redisKey);
 
-		System.out.println("User check : "+checkUser);
-		if("valid".equals(checkUser)) {
-			Boolean delete = stringRedisTemplate.delete(redisKey);
-			System.out.println("Session deleted from Redis : "+delete);
-
-			delete = removeAccountFromCache(redisKey);
-			System.out.println("Account deleted from Redis : "+delete);
-
-			if(multiRegion) {
-
-				Response resp = apiGatewayClient.callAPIGatewayDiffRegion(null, null, "delete", redisKey);
-
-				if(resp!=null && "0".equals(resp.getCode())) {
-					return true;
-				}else {
-					return false;
-				}
+			if(resp!=null && "0".equals(resp.getCode())) {
+				return true;
+			}else {
+				System.out.println("User not found in cross region cache.");
+				return false;
 			}
-			return delete;
 		}else {
-			System.out.println("User not found in cache.");
-			return false;
+
+			String checkUser = stringRedisTemplate.opsForValue().get( redisKey );
+
+			System.out.println("User check : "+checkUser);
+			if("valid".equals(checkUser)) {
+				Boolean delete = stringRedisTemplate.delete(redisKey);
+				System.out.println("Session deleted from Redis : "+delete);
+
+				delete = removeAccountFromCache(redisKey);
+				System.out.println("Account deleted from Redis : "+delete);
+
+				if(multiRegion) {
+
+					Response resp = apiGatewayClient.callAPIGatewayDiffRegion(null, null, "delete", redisKey);
+
+					if(resp!=null && "0".equals(resp.getCode())) {
+						return true;
+					}else {
+						return false;
+					}
+				}
+				return delete;
+			}else {
+				System.out.println("User not found in current cache.");
+				return false;
+			}
 		}
 	}
 
