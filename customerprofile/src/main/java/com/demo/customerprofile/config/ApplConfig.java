@@ -1,9 +1,6 @@
 package com.demo.customerprofile.config;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -38,23 +35,8 @@ public class ApplConfig {
 	@Value("${REDIS_TIMEOUT:3000}")
 	private int redis_timeout;
 
-	@Value("${jedis.timeout.interval}")	
+	@Value("${jedis.timeout.interval:900}")	
 	private long timeout_interval;
-
-	@Value("${tokenExpiryInterval}")
-	private long tokenExpiryInterval;
-
-	@Value("${policy.profile.summary}")
-	private List<String> summary_Policy;
-
-	@Value("${policy.profile.email}")
-	private List<String> email_Policy;
-
-	@Value("${policy.profile.mobile}")
-	private List<String> mobile_Policy;
-
-	@Value("${policy.profile.address}")
-	private List<String> address_Policy;
 
 	@Bean
 	public RestTemplate restTemplate() {
@@ -111,19 +93,8 @@ public class ApplConfig {
 	public FilterRegistrationBean<AuthorizeFilter> registerTokenValidationFilter(AuthorizeFilter authorizeFilter)
 	{
 		FilterRegistrationBean<AuthorizeFilter> registrationBean = new FilterRegistrationBean<>();
-		authorizeFilter.setTokenExpiryInterval(tokenExpiryInterval);
-		authorizeFilter.setMap(getPolicy());
 		registrationBean.setFilter(authorizeFilter);
 		registrationBean.setOrder(1);
 		return registrationBean;
-	}
-
-	public Map<String,List<String>> getPolicy(){
-		Map<String,List<String>> policyMap = new HashMap<>();
-		policyMap.put("profile_summary", summary_Policy);
-		policyMap.put("profile_email", email_Policy);
-		policyMap.put("profile_mobile", mobile_Policy);
-		policyMap.put("profile_address", address_Policy);
-		return policyMap;
 	}
 }

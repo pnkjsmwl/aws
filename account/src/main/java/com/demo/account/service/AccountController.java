@@ -48,12 +48,11 @@ public class AccountController {
 			String key = accountNumber+":"+request.getRequestURI();
 
 			Account accountFromRedis = (Account) redisUtils.getAccountValue(key);
-			if(accountFromRedis!=null)
-			{
+			if(accountFromRedis!=null) { 
 				log.info("Response received from Cache");
 				log.info("AccountNumber from Redis : "+accountFromRedis.getAccountNumber());
 
-				return ResponseEntity.ok().body(accountFromRedis);
+				return ResponseEntity.ok().body(accountFromRedis); 
 			}
 
 			HttpHeaders requestHeaders = new HttpHeaders();

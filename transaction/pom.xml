@@ -81,7 +81,15 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>http://localhost:8081/artifactory/my-maven</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>

@@ -18,7 +18,7 @@ import com.demo.transaction.doc.Transaction;
 public class RedisUtils {
 	private Log log = LogFactory.getLog(RedisUtils.class);
 
-	@Value("${jedis.timeout.interval}")	
+	@Value("${jedis.timeout.interval:900}")	
 	private long timeout_interval;
 
 	@Autowired
