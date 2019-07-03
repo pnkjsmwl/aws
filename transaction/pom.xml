@@ -34,6 +34,10 @@
 			<artifactId>spring-cloud-config-client</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-sleuth</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-redis</artifactId>
 		</dependency>
@@ -83,7 +87,7 @@
 	</dependencyManagement>
 	<repositories>
 		<repository>
-			<id>central</id>
+			<id>jfrog-repo</id>
 			<url>http://localhost:8081/artifactory/my-maven</url>
 			<snapshots>
 				<enabled>false</enabled>
