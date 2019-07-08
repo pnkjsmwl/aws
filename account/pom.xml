@@ -68,11 +68,13 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency>
+		<dependency>
 			<groupId>com.demo</groupId>
 			<artifactId>token-filter</artifactId>
+			<scope>system</scope>
 			<version>1.0</version>
-		</dependency> -->
+			<systemPath>${basedir}\lib\token-filter.jar</systemPath>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -85,32 +87,13 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	<!-- <repositories>
-		<repository>
-			<id>central</id>
-			<url>https://repo.maven.apache.org/maven2</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>local</id>
-			<url>http://localhost:8081/artifactory/my-maven</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-	</repositories> -->
+	<!-- <repositories> <repository> <id>central</id> <url>https://repo.maven.apache.org/maven2</url> 
+		<releases> <enabled>true</enabled> <updatePolicy>never</updatePolicy> </releases> 
+		<snapshots> <enabled>true</enabled> <updatePolicy>never</updatePolicy> </snapshots> 
+		</repository> <repository> <id>local</id> <url>http://localhost:8081/artifactory/my-maven</url> 
+		<releases> <enabled>true</enabled> <updatePolicy>never</updatePolicy> </releases> 
+		<snapshots> <enabled>true</enabled> <updatePolicy>never</updatePolicy> </snapshots> 
+		</repository> </repositories> -->
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
