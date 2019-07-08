@@ -10,30 +10,27 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Component;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 
+@Component
 public class JWEValidator{
 	private Log log = LogFactory.getLog(JWEValidator.class);
 
+	@Value("${tokenExpiryInterval:600000}")
 	private long tokenExpiryInterval;
-	private Map<String, List<String>> policyMap = new HashMap<>();
-
-	public JWEValidator(Map<String, List<String>> policyMap, long tokenExpiryInterval) {
-		this.policyMap = policyMap;
-		this.tokenExpiryInterval = tokenExpiryInterval;
-	}
 
 	public JWTPayload getJWTPayload(String JWEToken) throws ParseException, IllegalAccessException, NoSuchAlgorithmException, InvalidKeySpecException, IOException, JOSEException {
 		EncryptedJWT jwt = EncryptedJWT.parse(JWEToken);
@@ -96,7 +93,7 @@ public class JWEValidator{
 		return strKeyPEM;
 	}
 
-	public boolean checkPolicy(JWTPayload jwtPayload, String method, String requestURI) {
+	public boolean checkPolicy(JWTPayload jwtPayload, String method, String requestURI, Map<String, List<String>> policyMap) {
 		String[] split = requestURI.split("/");
 		String requestAPI = split[1];
 		String request = split[2];
@@ -105,9 +102,9 @@ public class JWEValidator{
 		if("account".equals(requestAPI)) {
 			if("summary".equals(request)  && policyMap.get("account_summary").contains(user_role) )
 				return true;
-			else if("current-balance".equals(request)  && policyMap.get("account_current_balance").contains(user_role) )
-				return true;
-			else if("due".equals(request)  && policyMap.get("account_due").contains(user_role) )
+		}
+		else if("customer".equals(requestAPI)) {
+			if("summary".equals(request)  && policyMap.get("profile_summary").contains(user_role) )
 				return true;
 		}
 		else if("transaction".equals(requestAPI)) {
@@ -118,16 +115,7 @@ public class JWEValidator{
 			else if("last".equals(request)  && policyMap.get("transaction_last").contains(user_role) )
 				return true;
 		}
-		else if("customer".equals(requestAPI)) {
-			if("summary".equals(request)  && policyMap.get("profile_summary").contains(user_role) )
-				return true;
-			else if("email".equals(request)  && policyMap.get("profile_email").contains(user_role) )
-				return true;
-			else if("mobile".equals(request)  && policyMap.get("profile_mobile").contains(user_role) )
-				return true;
-			else if("address".equals(request)  && policyMap.get("profile_address").contains(user_role) )
-				return true;
-		}
+
 		return false;
 	}
 }
