@@ -68,11 +68,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.demo</groupId>
 			<artifactId>token-filter</artifactId>
 			<version>1.0</version>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -85,15 +85,32 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	<repositories>
+	<!-- <repositories>
 		<repository>
-			<id>jfrog-repo</id>
-			<url>http://localhost:8081/artifactory/my-maven</url>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 			<snapshots>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
 		</repository>
-	</repositories>
+		<repository>
+			<id>local</id>
+			<url>http://localhost:8081/artifactory/my-maven</url>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories> -->
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
