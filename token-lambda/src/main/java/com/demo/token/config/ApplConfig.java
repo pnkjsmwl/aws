@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration.JedisClientConfigurationBuilder;
@@ -76,9 +77,11 @@ public class ApplConfig {
 		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
 		redisStandaloneConfiguration.setHostName(redis_host);
 		redisStandaloneConfiguration.setPort(redis_port);
+		redisStandaloneConfiguration.setPassword(RedisPassword.of("awspoc-redis1010"));
 
 		JedisClientConfigurationBuilder jedisClientConfiguration = JedisClientConfiguration.builder();
 		jedisClientConfiguration.connectTimeout(Duration.ofMillis(redis_timeout));// connection timeout in milliseconds
+		jedisClientConfiguration.useSsl();
 
 		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory(redisStandaloneConfiguration, jedisClientConfiguration.build());
 		return jedisConFactory;
