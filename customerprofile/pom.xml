@@ -72,10 +72,12 @@
 		<dependency>
 			<groupId>com.demo</groupId>
 			<artifactId>token-filter</artifactId>
+			<scope>system</scope>
 			<version>1.0</version>
+			<systemPath>${basedir}\lib\token-filter.jar</systemPath>
 		</dependency>
 	</dependencies>
-	<repositories>
+	<!-- <repositories>
 		<repository>
 			<id>jfrog-repo</id>
 			<url>http://localhost:8081/artifactory/my-maven</url>
@@ -83,7 +85,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-	</repositories>
+	</repositories> -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
